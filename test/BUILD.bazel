@@ -1,0 +1,33 @@
+load("//rules:skytest_test.bzl", "skytest_test")
+
+skytest_test(
+    name = "pass_test",
+    srcs = ["pass_test.cpp"],
+    stdout = [
+        "expect true",
+        "PASS",
+        "all tests passed",
+    ],
+)
+
+skytest_test(
+    name = "fail_test",
+    srcs = ["fail_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "expect true",
+        "FAIL",
+        "1 test failed",
+    ],
+)
+
+skytest_test(
+    name = "multiple_pass_test",
+    srcs = ["multiple_pass_test.cpp"],
+    stdout = [
+        "expect true 1",
+        "expect true 2",
+        "all tests passed",
+        "2 tests",
+    ],
+)

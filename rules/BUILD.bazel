@@ -1,0 +1,4 @@
+exports_files(
+    ["skytest_test.sh"],
+    visibility = ["//test:__pkg__"],
+)

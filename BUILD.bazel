@@ -1,7 +1,7 @@
 load("@bazel_clang_format//:defs.bzl", "clang_format_update")
 load("@bazel_clang_tidy//:defs.bzl", "clang_tidy_apply_fixes")
 load("@buildifier_prebuilt//:rules.bzl", "buildifier")
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -42,7 +42,9 @@ buildifier(
     mode = "fix",
 )
 
-cc_binary(
-    name = "dummy",
-    srcs = ["dummy.cpp"],
+cc_library(
+    name = "skytest",
+    hdrs = ["skytest.hpp"],
+    include_prefix = "skytest",
+    visibility = ["//visibility:public"],
 )
