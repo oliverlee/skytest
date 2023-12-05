@@ -123,14 +123,18 @@ struct relation
 };
 
 template <class F>
-struct predicate
+struct predicate : F
 {
+  template <class G, class = std::enable_if_t<std::is_constructible_v<F, G&&>>>
+  constexpr predicate(G&& g) : F{std::forward<G>(g)}
+  {}
+
   template <class... Ts>
   constexpr auto operator()(Ts&&... args) const -> std::remove_reference_t<
-      decltype(bool(F{}(std::as_const(args)...)),
+      decltype(bool(std::declval<const F&>()(std::as_const(args)...)),
                std::declval<relation<F, remove_cvref_t<Ts>...>>())>
   {
-    const auto value = F{}(std::as_const(args)...);
+    const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
     return {std::tuple<remove_cvref_t<Ts>...>{args...}, value};
   }
 };
@@ -164,12 +168,19 @@ public:
   constexpr auto pred() const noexcept { return result_.pred(); }
 };
 
-inline constexpr auto eq = detail::predicate<std::equal_to<>>{};
-inline constexpr auto ne = detail::predicate<std::not_equal_to<>>{};
-inline constexpr auto lt = detail::predicate<std::less<>>{};
-inline constexpr auto gt = detail::predicate<std::greater<>>{};
-inline constexpr auto le = detail::predicate<std::less_equal<>>{};
-inline constexpr auto ge = detail::predicate<std::greater_equal<>>{};
+template <class F>
+constexpr auto pred(F&& f)
+{
+  return detail::predicate<detail::remove_cvref_t<F>>{
+      std::forward<F>(f)};
+}
+
+inline constexpr auto eq = pred(std::equal_to<>{});
+inline constexpr auto ne = pred(std::not_equal_to<>{});
+inline constexpr auto lt = pred(std::less<>{});
+inline constexpr auto gt = pred(std::greater<>{});
+inline constexpr auto le = pred(std::less_equal<>{});
+inline constexpr auto ge = pred(std::greater_equal<>{});
 
 struct summary
 {
@@ -299,8 +310,8 @@ auto is_expect_result_(const T&) -> std::false_type;
 
 template <class T>
 constexpr auto is_expect_result_v =
-    (not std::is_reference<T>::value) and
-    decltype(is_expect_result_(std::declval<T>()))::value;
+    (not std::is_reference_v<T>)and decltype(is_expect_result_(
+        std::declval<T>()))::value;
 
 class test
 {
@@ -316,6 +327,8 @@ public:
           override>>
   constexpr auto operator=(const F& func) -> void
   {
+    static_assert(F{});
+
     cfg<Override>.report(name_ | func());
   }
 };

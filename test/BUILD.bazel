@@ -58,6 +58,17 @@ skytest_test(
     ],
 )
 
+skytest_test(
+    name = "pred_test",
+    srcs = ["pred_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "equal one.*PASS",
+        "equal two.*FAIL.*pred_test.cpp:13",
+        "lambda.*{}(1)",
+    ],
+)
+
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],
