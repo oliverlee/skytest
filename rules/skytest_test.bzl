@@ -6,7 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 def skytest_test(
         name,
-        srcs,
+        srcs = [],
+        binary = None,
         stdout = [],
         return_code = 0):
     """
@@ -16,17 +17,25 @@ def skytest_test(
       name: string
         Name for `skytest_test` rule.
       srcs: string_list
-        Executable sources
+        Executable sources used to build a C++ binary target. Cannot be used with `binary`.
+      binary: string_label
+        C++ binary target to use. Cannot be used with `srcs`.
       stdout: string_list
         Strings to search for in terminal output.
       return_code: int
         Expected return code.
     """
-    cc_binary(
-        name = name + "_bin",
-        srcs = srcs,
-        deps = ["//:skytest"],
-    )
+
+    if srcs and binary:
+        fail("`srcs` and `binary` cannot both be set.")
+
+    if not binary:
+        cc_binary(
+            name = name + "_bin",
+            srcs = srcs,
+            deps = ["//:skytest"],
+        )
+        binary = name + "_bin"
 
     # args are passed to a genrule instead of directly to an sh_test to avoid
     # arg tokenization
@@ -38,7 +47,7 @@ def skytest_test(
     native.genrule(
         name = "gen_" + name,
         outs = ["gen_" + name + ".sh"],
-        tools = [name + "_bin"],
+        tools = [binary],
         cmd = r"""
 set -euo pipefail
 echo "set -euo pipefail" > $@
@@ -54,7 +63,7 @@ echo "for line in \$${{stdout[@]}}; do" >> $@
 echo "  grep -q \"\$$line\" log.out" >> $@
 echo "done" >> $@
 """.format(
-            binary = name + "_bin",
+            binary = binary,
             stdout = " ".join(["'{}'".format(line) for line in stdout]),
             return_code = return_code,
         ),
@@ -63,5 +72,5 @@ echo "done" >> $@
     native.sh_test(
         name = name,
         srcs = ["gen_" + name],
-        data = [name + "_bin"],
+        data = [binary],
     )

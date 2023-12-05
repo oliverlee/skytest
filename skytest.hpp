@@ -90,9 +90,15 @@ template <class Printer>
 class runner
 {
   Printer printer_;
-  summary summary_;
+  summary summary_{};
 
 public:
+  template <
+      class P = Printer,
+      class = std::enable_if_t<std::is_default_constructible_v<P>>>
+  runner() : printer_{}
+  {}
+
   explicit runner(Printer p) : printer_{p} {}
 
   ~runner()

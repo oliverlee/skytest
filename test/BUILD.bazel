@@ -1,4 +1,5 @@
 load("//rules:skytest_test.bzl", "skytest_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 skytest_test(
     name = "pass_test",
@@ -30,4 +31,21 @@ skytest_test(
         "all tests passed",
         "2 tests",
     ],
+)
+
+cc_library(
+    name = "no_malloc",
+    srcs = ["no_malloc.cpp"],
+)
+
+cc_binary(
+    name = "null_printer",
+    srcs = ["null_printer.cpp"],
+    malloc = ":no_malloc",
+    deps = ["//:skytest"],
+)
+
+skytest_test(
+    name = "null_printer_test",
+    binary = ":null_printer",
 )
