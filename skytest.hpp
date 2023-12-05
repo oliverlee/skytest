@@ -2,10 +2,17 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace skytest {
+
+template <class Relation>
+class expectation;
+
 namespace detail {
 class source_location
 {
@@ -26,40 +33,77 @@ public:
   constexpr auto line() const noexcept { return line_; }
 };
 
-struct expect
+template <class Relation>
+struct result
 {
   source_location source;
-  bool value;
+  Relation rel;
 
-  friend class expectation;
+  constexpr explicit operator bool() const { return bool(rel); }
+
+  constexpr auto to_expectation(std::string_view name) &&
+  {
+    return expectation<Relation>{name, std::move(*this)};
+  }
+  constexpr friend auto operator|(std::string_view name, result&& result)
+  {
+    return std::move(result).to_expectation(name);
+  }
 };
 
-class test;
+template <class... Args>
+struct relation
+{
+  std::tuple<const Args&...> args;
+  bool value;
+
+  constexpr operator bool() const { return value; }
+};
+
+template <class F>
+struct predicate
+{
+  template <class... Ts>
+  constexpr auto operator()(const Ts&... args) const -> std::remove_reference_t<
+      decltype(bool(F{}(args...)), std::declval<relation<Ts...>>())>
+  {
+    return {std::tuple<const Ts&...>{args...}, F{}(args...)};
+  }
+};
 }  // namespace detail
 
+template <class Relation>
 constexpr auto expect(
-    bool value, detail::source_location sl = detail::source_location::current())
+    Relation r, detail::source_location sl = detail::source_location::current())
 {
-  return detail::expect{sl, value};
+  return detail::result<Relation>{sl, r};
 }
 
+template <class Relation>
 class expectation
 {
   std::string_view name_;
-  detail::expect result_;
+  detail::result<Relation> result_;
 
-  friend class ::skytest::detail::test;
+  friend struct ::skytest::detail::result<Relation>;
 
-  constexpr expectation(std::string_view n, detail::expect r)
-      : name_{n}, result_{r}
+  constexpr expectation(std::string_view n, detail::result<Relation>&& r)
+      : name_{n}, result_{std::move(r)}
   {}
 
 public:
   constexpr auto name() const noexcept { return name_; }
   constexpr auto file() const noexcept { return result_.source.file_name(); }
   constexpr auto line() const noexcept { return result_.source.line(); }
-  constexpr explicit operator bool() const { return result_.value; }
+  constexpr explicit operator bool() const { return bool(result_); }
 };
+
+inline constexpr auto eq = detail::predicate<std::equal_to<>>{};
+inline constexpr auto ne = detail::predicate<std::not_equal_to<>>{};
+inline constexpr auto lt = detail::predicate<std::less<>>{};
+inline constexpr auto gt = detail::predicate<std::greater<>>{};
+inline constexpr auto le = detail::predicate<std::less_equal<>>{};
+inline constexpr auto ge = detail::predicate<std::greater_equal<>>{};
 
 struct summary
 {
@@ -93,7 +137,8 @@ class default_printer
 public:
   default_printer(std::ostream& os) : os_{os} {}
 
-  friend auto& operator<<(default_printer& p, const expectation& exp)
+  template <class R>
+  friend auto& operator<<(default_printer& p, const expectation<R>& exp)
   {
     p.os_ << "test `" << exp.name() << "`...";
 
@@ -145,7 +190,8 @@ public:
     std::exit(summary_.fail != 0);
   }
 
-  auto report(expectation exp) & -> void
+  template <class R>
+  auto report(const expectation<R>& exp) & -> void
   {
     printer_ << exp;
     ++(exp ? summary_.pass : summary_.fail);
@@ -159,6 +205,17 @@ template <class = override>
 auto cfg = runner<default_printer>{std::cout};
 
 namespace detail {
+
+template <class R>
+auto is_expect_result_(result<R>) -> std::true_type;
+template <class T>
+auto is_expect_result_(const T&) -> std::false_type;
+
+template <class T>
+constexpr auto is_expect_result_v =
+    (not std::is_reference<T>::value) and
+    decltype(is_expect_result_(std::declval<T>()))::value;
+
 class test
 {
   std::string_view name_;
@@ -169,11 +226,11 @@ public:
   template <
       class F,
       class Override = std::enable_if_t<
-          std::is_same<detail::expect, std::result_of_t<const F&()>>::value,
+          is_expect_result_v<std::result_of_t<const F&()>>,
           override>>
   constexpr auto operator=(const F& func) -> void
   {
-    cfg<Override>.report({name_, func()});
+    cfg<Override>.report(name_ | func());
   }
 };
 }  // namespace detail

@@ -31,11 +31,24 @@ skytest_test(
 )
 
 skytest_test(
-    name = "source_location_test",
-    srcs = ["source_location_test.cpp"],
+    name = "comparison_test",
+    srcs = ["comparison_test.cpp"],
     return_code = 1,
     stdout = [
-        "expect true.*FAIL.*source_location_test.cpp:8",
+        "expect true.*PASS",
+        "expect eq.*PASS",
+        "expect ne.*PASS",
+        "expect lt.*PASS",
+        "expect gt.*PASS",
+        "expect le.*PASS",
+        "expect ge.*PASS",
+        "not expect true.*FAIL.*comparison_test.cpp:22",
+        "not expect eq.*FAIL.*comparison_test.cpp:23",
+        "not expect ne.*FAIL.*comparison_test.cpp:24",
+        "not expect lt.*FAIL.*comparison_test.cpp:25",
+        "not expect gt.*FAIL.*comparison_test.cpp:26",
+        "not expect le.*FAIL.*comparison_test.cpp:27",
+        "not expect ge.*FAIL.*comparison_test.cpp:28",
     ],
 )
 
