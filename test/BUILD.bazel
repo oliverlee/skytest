@@ -44,11 +44,17 @@ skytest_test(
         "expect ge.*PASS",
         "not expect true.*FAIL.*comparison_test.cpp:22",
         "not expect eq.*FAIL.*comparison_test.cpp:23",
+        "std::equal_to<void>{}(1, 0)",
         "not expect ne.*FAIL.*comparison_test.cpp:24",
+        "std::not_equal_to<void>{}(1, 1)",
         "not expect lt.*FAIL.*comparison_test.cpp:25",
+        "std::less<void>{}(1, 0)",
         "not expect gt.*FAIL.*comparison_test.cpp:26",
+        "std::greater<void>{}(0, 1)",
         "not expect le.*FAIL.*comparison_test.cpp:27",
+        "std::less_equal<void>{}(1, 0)",
         "not expect ge.*FAIL.*comparison_test.cpp:28",
+        "std::greater_equal<void>{}(0, 1)",
     ],
 )
 

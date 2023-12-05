@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdlib>
 #include <functional>
@@ -33,13 +34,69 @@ public:
   constexpr auto line() const noexcept { return line_; }
 };
 
+template <class T, class = void>
+struct has_args : std::false_type
+{};
+template <class T>
+struct has_args<T, std::void_t<decltype(std::declval<const T&>().args)>>
+    : std::true_type
+{};
+
+inline constexpr auto empty_args = std::tuple<>{};
+
 template <class Relation>
-struct result
+class result
 {
+public:
   source_location source;
   Relation rel;
 
+private:
+  template <class F>
+  static constexpr auto predicate_type_name()
+  {
+    constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
+
+#ifdef __clang__
+    constexpr auto prefix = std::string_view{"F = "};
+    constexpr auto suffix = std::string_view{"]"};
+#else
+    constexpr auto prefix = std::string_view{"with F = "};
+    constexpr auto suffix = std::string_view{";"};
+#endif
+
+    const auto lower = full.find(prefix) + prefix.size();
+    const auto upper = full.find(suffix, lower);
+
+    return std::string_view{full.begin() + lower, upper - lower};
+  }
+
+  template <class T = void>
+  constexpr auto pred_args(std::true_type) const
+  {
+    constexpr auto pred =
+        predicate_type_name<typename Relation::predicate_type>();
+    return std::tuple<std::string_view, decltype((rel.args))>{pred, rel.args};
+  }
+  template <class T = void>
+  constexpr auto pred_args(std::false_type) const
+  {
+    return std::tuple<std::string_view, const std::tuple<>&>{"", empty_args};
+  }
+
+public:
   constexpr explicit operator bool() const { return bool(rel); }
+
+  template <class R = Relation>
+  constexpr auto pred() const
+  {
+    return std::get<0>(pred_args(has_args<R>{}));
+  }
+  template <class R = Relation>
+  constexpr auto& args() const
+  {
+    return std::get<1>(pred_args(has_args<R>{}));
+  }
 
   constexpr auto to_expectation(std::string_view name) &&
   {
@@ -51,10 +108,15 @@ struct result
   }
 };
 
-template <class... Args>
+template <class T>
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
+template <class F, class... Args>
 struct relation
 {
-  std::tuple<const Args&...> args;
+  using predicate_type = F;
+
+  std::tuple<Args...> args;
   bool value;
 
   constexpr operator bool() const { return value; }
@@ -64,10 +126,12 @@ template <class F>
 struct predicate
 {
   template <class... Ts>
-  constexpr auto operator()(const Ts&... args) const -> std::remove_reference_t<
-      decltype(bool(F{}(args...)), std::declval<relation<Ts...>>())>
+  constexpr auto operator()(Ts&&... args) const -> std::remove_reference_t<
+      decltype(bool(F{}(std::as_const(args)...)),
+               std::declval<relation<F, remove_cvref_t<Ts>...>>())>
   {
-    return {std::tuple<const Ts&...>{args...}, F{}(args...)};
+    const auto value = F{}(std::as_const(args)...);
+    return {std::tuple<remove_cvref_t<Ts>...>{args...}, value};
   }
 };
 }  // namespace detail
@@ -85,7 +149,7 @@ class expectation
   std::string_view name_;
   detail::result<Relation> result_;
 
-  friend struct ::skytest::detail::result<Relation>;
+  friend class ::skytest::detail::result<Relation>;
 
   constexpr expectation(std::string_view n, detail::result<Relation>&& r)
       : name_{n}, result_{std::move(r)}
@@ -96,6 +160,8 @@ public:
   constexpr auto file() const noexcept { return result_.source.file_name(); }
   constexpr auto line() const noexcept { return result_.source.line(); }
   constexpr explicit operator bool() const { return bool(result_); }
+  constexpr auto& args() const noexcept { return result_.args(); }
+  constexpr auto pred() const noexcept { return result_.pred(); }
 };
 
 inline constexpr auto eq = detail::predicate<std::equal_to<>>{};
@@ -134,6 +200,15 @@ class default_printer
     }
   };
 
+  template <class... Ts, std::size_t... Is>
+  auto
+  print_args(const std::tuple<Ts...>& args, std::index_sequence<Is...>) const
+      -> void
+  {
+    std::ignore = std::array<bool, sizeof...(Is)>{
+        ((os_ << (Is == 0 ? "" : ", ") << std::get<Is>(args)), true)...};
+  }
+
 public:
   default_printer(std::ostream& os) : os_{os} {}
 
@@ -147,6 +222,17 @@ public:
     } else {
       p.os_ << colors::fail << "[FAIL] " << colors::none << exp.file() << ":"
             << exp.line();
+
+      constexpr auto N =
+          std::tuple_size_v<detail::remove_cvref_t<decltype(exp.args())>>;
+
+      if (N) {
+        p.os_ << "\n" << exp.pred() << "{}(";
+        p.print_args(exp.args(), std::make_index_sequence<N>{});
+        p.os_ << ")";
+      }
+
+      p.os_ << "\n";
     }
     p.os_ << "\n";
 
