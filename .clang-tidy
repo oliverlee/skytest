@@ -1,0 +1,68 @@
+UseColor: true
+
+Checks: >
+    bugprone-*,
+    clang-analyzer-cplusplus*,
+    concurrency-*,
+    cppcoreguidelines-*,
+    misc-*,
+    modernize-*,
+    performance-*,
+    readability-*,
+
+    # Bazel does this for determinism,
+    -clang-diagnostic-builtin-macro-redefined,
+
+    # suppress due to assert,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+
+    # short names are fine for short lifetimes,
+    -readability-identifier-length,
+
+    # allow unused variables to be unnamed,
+    -readability-named-parameter,
+
+    # C-arrays necessary as function args,
+    -modernize-avoid-c-arrays,
+
+    # use iterators as abstractions, not pointers,
+    -readability-qualified-auto,
+
+    # it's okay for exceptions to escape main,
+    -bugprone-exception-escape,
+
+    # false positive with spaceship operator,
+    # https://reviews.llvm.org/D95714?id=320393,
+    # NOTE: still false positive with LLVM 17.0.2,
+    -modernize-use-nullptr,
+
+    # disable common aliases,
+    -cppcoreguidelines-avoid-c-arrays,
+    -cppcoreguidelines-avoid-magic-numbers,
+    -cppcoreguidelines-c-copy-assignment-signature,
+    -cppcoreguidelines-explicit-virtual-functions,
+    -cppcoreguidelines-non-private-member-variables-in-classes,
+
+    # disable EXTREMELY SLOW checks,
+    -bugprone-reserved-identifier,
+    -readability-identifier-naming,
+    -misc-confusable-identifiers,
+
+    # too many false positives,
+    -misc-include-cleaner,
+
+CheckOptions:
+    - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+      value: true
+    - key: performance-move-const-arg.CheckTriviallyCopyableMove
+      value: false
+    - key: readability-implicit-bool-conversion.AllowIntegerConditions
+      value : true
+    - key: readability-implicit-bool-conversion.AllowPointerConditions
+      value : true
+
+# only lint files coming from this project
+HeaderFilterRegex: '__main__/'
+
+WarningsAsErrors: '*'
+

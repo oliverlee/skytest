@@ -1,0 +1,12 @@
+alias(
+    name = "gcc",
+    actual = "@gcc_toolchain//:toolchain",
+)
+
+alias(
+    name = "clang",
+    actual = select({
+        "@platforms//os:macos": "@llvm_toolchain//:cc-toolchain-aarch64-darwin",
+        "//conditions:default": "@llvm_toolchain//:cc-toolchain-x86_64-linux",
+    }),
+)
