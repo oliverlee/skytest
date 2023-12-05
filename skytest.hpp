@@ -6,22 +6,59 @@
 #include <type_traits>
 
 namespace skytest {
+namespace detail {
+class source_location
+{
+  std::string_view file_{"unknown"};
+  int line_{};
 
-struct expect_
-{
-  bool value;
+public:
+  static constexpr auto current(
+      const char* file = __builtin_FILE(), int line = __builtin_LINE()) noexcept
+  {
+    auto sl = source_location{};
+    sl.file_ = file;
+    sl.line_ = line;
+    return sl;
+  }
+
+  constexpr auto file_name() const noexcept { return file_; }
+  constexpr auto line() const noexcept { return line_; }
 };
-constexpr auto expect(bool value)
+
+struct expect
 {
-  return expect_{value};
+  source_location source;
+  bool value;
+
+  friend class expectation;
+};
+
+class test;
+}  // namespace detail
+
+constexpr auto expect(
+    bool value, detail::source_location sl = detail::source_location::current())
+{
+  return detail::expect{sl, value};
 }
 
-struct expect_result
+class expectation
 {
-  std::string_view name;
-  bool value;
+  std::string_view name_;
+  detail::expect result_;
 
-  constexpr explicit operator bool() const { return value; }
+  friend class ::skytest::detail::test;
+
+  constexpr expectation(std::string_view n, detail::expect r)
+      : name_{n}, result_{r}
+  {}
+
+public:
+  constexpr auto name() const noexcept { return name_; }
+  constexpr auto file() const noexcept { return result_.source.file_name(); }
+  constexpr auto line() const noexcept { return result_.source.line(); }
+  constexpr explicit operator bool() const { return result_.value; }
 };
 
 struct summary
@@ -56,16 +93,17 @@ class default_printer
 public:
   default_printer(std::ostream& os) : os_{os} {}
 
-  friend auto& operator<<(default_printer& p, const expect_result& er)
+  friend auto& operator<<(default_printer& p, const expectation& exp)
   {
-    p.os_ << "test `" << er.name << "`...";
+    p.os_ << "test `" << exp.name() << "`...";
 
-    if (er) {
-      p.os_ << colors::pass << "[PASS]";
+    if (exp) {
+      p.os_ << colors::pass << "[PASS]" << colors::none;
     } else {
-      p.os_ << colors::fail << "[FAIL]";
+      p.os_ << colors::fail << "[FAIL] " << colors::none << exp.file() << ":"
+            << exp.line();
     }
-    p.os_ << colors::none << "\n";
+    p.os_ << "\n";
 
     return p;
   }
@@ -107,10 +145,10 @@ public:
     std::exit(summary_.fail != 0);
   }
 
-  auto report(expect_result er) & -> void
+  auto report(expectation exp) & -> void
   {
-    printer_ << er;
-    ++(er ? summary_.pass : summary_.fail);
+    printer_ << exp;
+    ++(exp ? summary_.pass : summary_.fail);
   }
 };
 
@@ -131,11 +169,11 @@ public:
   template <
       class F,
       class Override = std::enable_if_t<
-          std::is_same<expect_, std::result_of_t<const F&()>>::value,
+          std::is_same<detail::expect, std::result_of_t<const F&()>>::value,
           override>>
   constexpr auto operator=(const F& func) -> void
   {
-    cfg<Override>.report({name_, func().value});
+    cfg<Override>.report({name_, func()});
   }
 };
 }  // namespace detail

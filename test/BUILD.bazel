@@ -5,9 +5,18 @@ skytest_test(
     name = "pass_test",
     srcs = ["pass_test.cpp"],
     stdout = [
-        "expect true",
-        "PASS",
+        "expect true.*PASS",
         "all tests passed",
+    ],
+)
+
+skytest_test(
+    name = "multiple_pass_test",
+    srcs = ["multiple_pass_test.cpp"],
+    stdout = [
+        "expect true 1.*PASS",
+        "expect true 2.*PASS",
+        "all tests passed.*2 tests",
     ],
 )
 
@@ -16,20 +25,17 @@ skytest_test(
     srcs = ["fail_test.cpp"],
     return_code = 1,
     stdout = [
-        "expect true",
-        "FAIL",
+        "expect true.*FAIL",
         "1 test failed",
     ],
 )
 
 skytest_test(
-    name = "multiple_pass_test",
-    srcs = ["multiple_pass_test.cpp"],
+    name = "source_location_test",
+    srcs = ["source_location_test.cpp"],
+    return_code = 1,
     stdout = [
-        "expect true 1",
-        "expect true 2",
-        "all tests passed",
-        "2 tests",
+        "expect true.*FAIL.*source_location_test.cpp:8",
     ],
 )
 
