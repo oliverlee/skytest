@@ -10,104 +10,7 @@
 #include <utility>
 
 namespace skytest {
-
-template <class Relation>
-class expectation;
-
 namespace detail {
-class source_location
-{
-  std::string_view file_{"unknown"};
-  int line_{};
-
-public:
-  static constexpr auto current(
-      const char* file = __builtin_FILE(), int line = __builtin_LINE()) noexcept
-  {
-    auto sl = source_location{};
-    sl.file_ = file;
-    sl.line_ = line;
-    return sl;
-  }
-
-  constexpr auto file_name() const noexcept { return file_; }
-  constexpr auto line() const noexcept { return line_; }
-};
-
-template <class T, class = void>
-struct has_args : std::false_type
-{};
-template <class T>
-struct has_args<T, std::void_t<decltype(std::declval<const T&>().args)>>
-    : std::true_type
-{};
-
-inline constexpr auto empty_args = std::tuple<>{};
-
-template <class Relation>
-class result
-{
-public:
-  source_location source;
-  Relation rel;
-
-private:
-  template <class F>
-  static constexpr auto predicate_type_name()
-  {
-    constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
-
-#ifdef __clang__
-    constexpr auto prefix = std::string_view{"F = "};
-    constexpr auto suffix = std::string_view{"]"};
-#else
-    constexpr auto prefix = std::string_view{"with F = "};
-    constexpr auto suffix = std::string_view{";"};
-#endif
-
-    const auto lower = full.find(prefix) + prefix.size();
-    const auto upper = full.find(suffix, lower);
-
-    return std::string_view{full.begin() + lower, upper - lower};
-  }
-
-  template <class T = void>
-  constexpr auto pred_args(std::true_type) const
-  {
-    constexpr auto pred =
-        predicate_type_name<typename Relation::predicate_type>();
-    return std::tuple<std::string_view, decltype((rel.args))>{pred, rel.args};
-  }
-  template <class T = void>
-  constexpr auto pred_args(std::false_type) const
-  {
-    return std::tuple<std::string_view, const std::tuple<>&>{"", empty_args};
-  }
-
-public:
-  constexpr explicit operator bool() const { return bool(rel); }
-
-  template <class R = Relation>
-  constexpr auto pred() const
-  {
-    return std::get<0>(pred_args(has_args<R>{}));
-  }
-  template <class R = Relation>
-  constexpr auto& args() const
-  {
-    return std::get<1>(pred_args(has_args<R>{}));
-  }
-
-  constexpr auto to_expectation(std::string_view name) &&
-  {
-    return expectation<Relation>{name, std::move(*this)};
-  }
-  constexpr friend auto operator|(std::string_view name, result&& result)
-  {
-    return std::move(result).to_expectation(name);
-  }
-};
-
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
@@ -115,8 +18,9 @@ template <class F, class... Args>
 struct relation
 {
   using predicate_type = F;
+  using arguments_type = std::tuple<Args...>;
 
-  std::tuple<Args...> args;
+  arguments_type args;
   bool value;
 
   constexpr operator bool() const { return value; }
@@ -138,41 +42,110 @@ struct predicate : F
     return {std::tuple<remove_cvref_t<Ts>...>{args...}, value};
   }
 };
-}  // namespace detail
 
-template <class Relation>
-constexpr auto expect(
-    Relation r, detail::source_location sl = detail::source_location::current())
+template <class F>
+static constexpr auto predicate_type_name()
 {
-  return detail::result<Relation>{sl, r};
+  constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
+
+#ifdef __clang__
+  constexpr auto prefix = std::string_view{"F = "};
+  constexpr auto suffix = std::string_view{"]"};
+#else
+  constexpr auto prefix = std::string_view{"with F = "};
+  constexpr auto suffix = std::string_view{"]"};
+#endif
+
+  const auto lower = full.find(prefix) + prefix.size();
+  const auto upper = full.find(suffix, lower);
+
+  return std::string_view{full.begin() + lower, upper - lower};
 }
 
-template <class Relation>
-class expectation
+class test;
+
+template <class T, class = void>
+struct has_args : std::false_type
+{};
+template <class T>
+struct has_args<T, std::void_t<decltype(std::declval<const T&>().args)>>
+    : std::true_type
+{};
+template <class T>
+constexpr auto has_args_v = has_args<T>::value;
+
+inline constexpr auto empty_args = std::tuple<>{};
+
+template <class Relation, std::enable_if_t<has_args_v<Relation>, bool> = true>
+constexpr auto pred_name(const Relation&)
 {
-  std::string_view name_;
-  detail::result<Relation> result_;
+  return predicate_type_name<typename Relation::predicate_type>();
+}
+template <
+    class Relation,
+    std::enable_if_t<not has_args_v<Relation>, bool> = true>
+constexpr auto pred_name(const Relation&)
+{
+  return std::string_view{};
+}
 
-  friend class ::skytest::detail::result<Relation>;
+template <class Relation, std::enable_if_t<has_args_v<Relation>, bool> = true>
+constexpr auto& args(const Relation& r)
+{
+  return r.args;
+}
+template <
+    class Relation,
+    std::enable_if_t<not has_args_v<Relation>, bool> = true>
+constexpr auto& args(const Relation&)
+{
+  return empty_args;
+}
+}  // namespace detail
 
-  constexpr expectation(std::string_view n, detail::result<Relation>&& r)
-      : name_{n}, result_{std::move(r)}
-  {}
+class source_location
+{
+  std::string_view file_{"unknown"};
+  int line_{-1};
 
 public:
-  constexpr auto name() const noexcept { return name_; }
-  constexpr auto file() const noexcept { return result_.source.file_name(); }
-  constexpr auto line() const noexcept { return result_.source.line(); }
-  constexpr explicit operator bool() const { return bool(result_); }
-  constexpr auto& args() const noexcept { return result_.args(); }
-  constexpr auto pred() const noexcept { return result_.pred(); }
+  static constexpr auto current(
+      const char* file = __builtin_FILE(), int line = __builtin_LINE()) noexcept
+  {
+    auto sl = source_location{};
+    sl.file_ = file;
+    sl.line_ = line;
+    return sl;
+  }
+
+  constexpr auto file_name() const noexcept { return file_; }
+  constexpr auto line() const noexcept { return line_; }
 };
+
+template <class Relation>
+struct result
+{
+  Relation relation;
+  source_location source;
+  std::string_view name{"unknown"};
+
+  constexpr explicit operator bool() const { return bool(relation); }
+
+  constexpr auto pred_name() const { return detail::pred_name(relation); }
+  constexpr auto& arguments() const { return detail::args(relation); }
+};
+
+template <class Relation>
+constexpr auto
+expect(Relation r, source_location sl = source_location::current())
+{
+  return result<Relation>{r, sl};
+}
 
 template <class F>
 constexpr auto pred(F&& f)
 {
-  return detail::predicate<detail::remove_cvref_t<F>>{
-      std::forward<F>(f)};
+  return detail::predicate<detail::remove_cvref_t<F>>{std::forward<F>(f)};
 }
 
 inline constexpr auto eq = pred(std::equal_to<>{});
@@ -224,27 +197,31 @@ public:
   default_printer(std::ostream& os) : os_{os} {}
 
   template <class R>
-  friend auto& operator<<(default_printer& p, const expectation<R>& exp)
+  friend auto& operator<<(default_printer& p, const result<R>& r)
   {
-    p.os_ << "test `" << exp.name() << "`...";
+    p.os_ << "test `" << r.name << "`...";
 
-    if (exp) {
-      p.os_ << colors::pass << "[PASS]" << colors::none;
+    if (r) {
+      p.os_ << colors::pass << "[PASS]";
     } else {
-      p.os_ << colors::fail << "[FAIL] " << colors::none << exp.file() << ":"
-            << exp.line();
+      p.os_ << colors::fail << "[FAIL]";
+    }
+    p.os_ << colors::none;
+
+    if (not r) {
+      p.os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
 
       constexpr auto N =
-          std::tuple_size_v<detail::remove_cvref_t<decltype(exp.args())>>;
-
+          std::tuple_size_v<detail::remove_cvref_t<decltype(r.arguments())>>;
       if (N) {
-        p.os_ << "\n" << exp.pred() << "{}(";
-        p.print_args(exp.args(), std::make_index_sequence<N>{});
+        p.os_ << r.pred_name() << "{}(";
+        p.print_args(r.arguments(), std::make_index_sequence<N>{});
         p.os_ << ")";
       }
 
       p.os_ << "\n";
     }
+
     p.os_ << "\n";
 
     return p;
@@ -288,7 +265,7 @@ public:
   }
 
   template <class R>
-  auto report(const expectation<R>& exp) & -> void
+  auto report(const result<R>& exp) & -> void
   {
     printer_ << exp;
     ++(exp ? summary_.pass : summary_.fail);
@@ -304,13 +281,13 @@ auto cfg = runner<default_printer>{std::cout};
 namespace detail {
 
 template <class R>
-auto is_expect_result_(result<R>) -> std::true_type;
+auto is_result_(result<R>) -> std::true_type;
 template <class T>
-auto is_expect_result_(const T&) -> std::false_type;
+auto is_result_(const T&) -> std::false_type;
 
 template <class T>
-constexpr auto is_expect_result_v =
-    (not std::is_reference_v<T>)and decltype(is_expect_result_(
+constexpr auto is_result_v =
+    (not std::is_reference_v<T>)and decltype(is_result_(
         std::declval<T>()))::value;
 
 class test
@@ -323,15 +300,17 @@ public:
   template <
       class F,
       class Override = std::enable_if_t<
-          is_expect_result_v<std::result_of_t<const F&()>>,
+          is_result_v<decltype(std::declval<const F&>()())>,
           override>>
   constexpr auto operator=(const F& func) -> void
   {
-    static_assert(F{});
+    auto result = func();
+    result.name = name_;
 
-    cfg<Override>.report(name_ | func());
+    cfg<Override>.report(result);
   }
 };
+
 }  // namespace detail
 
 namespace literals {
