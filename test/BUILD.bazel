@@ -69,6 +69,22 @@ skytest_test(
     ],
 )
 
+skytest_test(
+    name = "constexpr_test",
+    srcs = ["constexpr_test.cpp"],
+    copts = ["-std=c++20"],
+    return_code = 1,
+    stdout = [
+        "constexpr pass.*\\[CONSTEXPR PASS\\]",
+        "constexpr fail.*\\[CONSTEXPR FAIL\\].*cpp:14",
+        "runtime pass.*\\[PASS\\]",
+        "runtime fail.*\\[FAIL\\].*cpp:22",
+        "runtime pass, constexpr fail.*\\[PASS\\].*(CONSTEXPR FAIL)",
+        "runtime fail, constexpr pass.*\\[FAIL\\].*(CONSTEXPR PASS).*cpp:35",
+        "3 tests passed.*3 tests failed",
+    ],
+)
+
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],

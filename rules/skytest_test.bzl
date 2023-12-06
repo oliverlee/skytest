@@ -9,7 +9,8 @@ def skytest_test(
         srcs = [],
         binary = None,
         stdout = [],
-        return_code = 0):
+        return_code = 0,
+        copts = []):
     """
     Runs a skytest unit test and checks the return code and output to stdout.
 
@@ -24,6 +25,8 @@ def skytest_test(
         Strings to search for in terminal output.
       return_code: int
         Expected return code.
+      copts: string_list
+        List of strings used with the cc_binary `copts` attribute.
     """
 
     if srcs and binary:
@@ -34,6 +37,7 @@ def skytest_test(
             name = name + "_bin",
             srcs = srcs,
             deps = ["//:skytest"],
+            copts = copts,
         )
         binary = name + "_bin"
 

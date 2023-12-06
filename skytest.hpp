@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -128,6 +129,7 @@ struct result
   Relation relation;
   source_location source;
   std::string_view name{"unknown"};
+  std::optional<bool> compile_time{};
 
   constexpr explicit operator bool() const { return bool(relation); }
 
@@ -168,6 +170,7 @@ class default_printer
   struct colors
   {
     static constexpr auto none = std::string_view{"\033[0m"};
+    static constexpr auto dim = std::string_view{"\033[2m"};
     static constexpr auto pass = std::string_view{"\033[32m"};
     static constexpr auto fail = std::string_view{"\033[31m"};
   };
@@ -201,11 +204,34 @@ public:
   {
     p.os_ << "test `" << r.name << "`...";
 
-    if (r) {
-      p.os_ << colors::pass << "[PASS]";
-    } else {
-      p.os_ << colors::fail << "[FAIL]";
-    }
+    [&os = p.os_, runtime = r, compile_time = r.compile_time] {
+      if (runtime and compile_time == true) {
+        os << colors::pass << "[CONSTEXPR PASS]";
+        return;
+      }
+      if (runtime and compile_time == std::nullopt) {
+        os << colors::pass << "[PASS]";
+        return;
+      }
+      if (runtime and compile_time == false) {
+        os << colors::pass << "[PASS]" << colors::fail << colors::dim
+           << "(CONSTEXPR FAIL)";
+        return;
+      }
+      if (not runtime and compile_time == true) {
+        os << colors::fail << "[FAIL]" << colors::pass << colors::dim
+           << "(CONSTEXPR PASS)";
+        return;
+      }
+      if (not runtime and compile_time == std::nullopt) {
+        os << colors::fail << "[FAIL]";
+        return;
+      }
+      if (not runtime and compile_time == false) {
+        os << colors::fail << "[CONSTEXPR FAIL]";
+        return;
+      }
+    }();
     p.os_ << colors::none;
 
     if (not r) {
@@ -290,6 +316,17 @@ constexpr auto is_result_v =
     (not std::is_reference_v<T>)and decltype(is_result_(
         std::declval<T>()))::value;
 
+template <class F, class = void>
+struct compile_time_result
+{
+  static constexpr auto value = std::optional<bool>{};
+};
+template <class F>
+struct compile_time_result<F, std::enable_if_t<bool{F{}()} or true>>
+{
+  static constexpr auto value = std::optional<bool>{bool{F{}()}};
+};
+
 class test
 {
   std::string_view name_;
@@ -301,11 +338,13 @@ public:
       class F,
       class Override = std::enable_if_t<
           is_result_v<decltype(std::declval<const F&>()())>,
-          override>>
+          override>,
+      class Pass = compile_time_result<F>>
   constexpr auto operator=(const F& func) -> void
   {
     auto result = func();
     result.name = name_;
+    result.compile_time = Pass::value;
 
     cfg<Override>.report(result);
   }
