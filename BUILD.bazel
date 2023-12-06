@@ -1,45 +1,15 @@
-load("@bazel_clang_format//:defs.bzl", "clang_format_update")
-load("@bazel_clang_tidy//:defs.bzl", "clang_tidy_apply_fixes")
-load("@buildifier_prebuilt//:rules.bzl", "buildifier")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//:__subpackages__"])
 
 filegroup(
     name = "format_config",
     srcs = [".clang-format"],
-    visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "tidy_config",
     srcs = [".clang-tidy"],
-    visibility = ["//visibility:public"],
-)
-
-clang_format_update(
-    name = "clang-format",
-    binary = "@llvm_toolchain//:clang-format",
-    config = ":format_config",
-)
-
-clang_tidy_apply_fixes(
-    name = "clang-tidy-fix",
-    apply_replacements_binary = "@llvm_toolchain//:clang-apply-replacements",
-    tidy_binary = "@llvm_toolchain//:clang-tidy",
-    tidy_config = ":tidy_config",
-)
-
-buildifier(
-    name = "buildifier.check",
-    lint_mode = "warn",
-    mode = "check",
-)
-
-buildifier(
-    name = "buildifier.fix",
-    lint_mode = "warn",
-    mode = "fix",
 )
 
 cc_library(

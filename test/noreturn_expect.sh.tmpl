@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TEST_PATH="$(readlink -f ${BASH_SOURCE[0]})"
+SCRIPT_NAME="${TEST_PATH##*/test/}}"
+WORKSPACE="${SCRIPT_NAME%.*}"
+
+cp "$BAZEL_WORKSPACE_ROOT/.bazeliskrc" .
+
+cat >.bazelrc <<EOF
+startup --max_idle_secs=1
+build --announce_rc
+build --color=yes
+build --show_timestamps
+build --incompatible_strict_action_env
+build --incompatible_enable_cc_toolchain_resolution
+build --action_env="BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1"
+EOF
+
+cat >WORKSPACE.bazel <<EOF
+workspace(name = "$WORKSPACE")
+
+local_repository(
+    name = "skytest",
+    path = "$BAZEL_WORKSPACE_ROOT",
+)
+
+local_repository(
+    name = "rules_cc",
+    path = "$BAZEL_EXTERNAL_DIR/rules_cc",
+)
+local_repository(
+    name = "bazel_bootlin",
+    path = "$BAZEL_EXTERNAL_DIR/bazel_bootlin",
+)
+local_repository(
+    name = "gcc_toolchain_files",
+    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain_files",
+)
+local_repository(
+    name = "gcc_toolchain",
+    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain",
+)
+
+register_toolchains(
+    "@gcc_toolchain//:toolchain",
+)
+EOF
+
+cat >BUILD.bazel <<EOF
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+    name = "noreturn_expect",
+    srcs = ["noreturn_expect.cpp"],
+    copts = [
+        "-std=c++17",
+        "-Werror",
+        "-Wall",
+        "-Wextra",
+    ],
+    deps = ["@skytest"],
+)
+EOF
+
+cat >noreturn_expect.cpp <<EOF
+#include "skytest/skytest.hpp"
+
+auto main() -> int
+{
+    using namespace ::skytest::literals;
+    using ::skytest::eq;
+    using ::skytest::expect;
+
+    "noreturn"_test = [] {
+        // not returned in test closure
+        expect(eq(1, 1));
+
+        return expect(eq(1, 1));
+    };
+}
+EOF
+
+XDG_CACHE_HOME="$XDG_CACHE_HOME"
+export XDG_CACHE_HOME
+
+$BAZEL_BIN \
+    --nosystem_rc \
+    --nohome_rc \
+    build \
+    //:noreturn_expect

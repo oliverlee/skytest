@@ -138,6 +138,7 @@ struct result
 };
 
 template <class Relation>
+[[nodiscard]]
 constexpr auto
 expect(Relation r, source_location sl = source_location::current())
 {

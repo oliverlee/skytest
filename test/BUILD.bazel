@@ -1,5 +1,13 @@
 load("//rules:skytest_test.bzl", "skytest_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load(
+    "@local_config_info//:defs.bzl",
+    "BAZEL_BIN",
+    "BAZEL_EXTERNAL_DIR",
+    "BAZEL_WORKSPACE_ROOT",
+    "XDG_CACHE_HOME",
+)
 
 skytest_test(
     name = "pass_test",
@@ -82,6 +90,33 @@ skytest_test(
         "runtime pass, constexpr fail.*\\[PASS\\].*(CONSTEXPR FAIL)",
         "runtime fail, constexpr pass.*\\[FAIL\\].*(CONSTEXPR PASS).*cpp:35",
         "3 tests passed.*3 tests failed",
+    ],
+)
+
+expand_template(
+    name = "noreturn_expect_sh",
+    out = "noreturn_expect.sh",
+    substitutions = {
+        "$BAZEL_BIN": BAZEL_BIN,
+        "$BAZEL_EXTERNAL_DIR": BAZEL_EXTERNAL_DIR,
+        "$BAZEL_WORKSPACE_ROOT": BAZEL_WORKSPACE_ROOT,
+        "$XDG_CACHE_HOME": XDG_CACHE_HOME,
+    },
+    template = "noreturn_expect.sh.tmpl",
+)
+
+sh_binary(
+    name = "noreturn_expect_bin",
+    srcs = ["noreturn_expect.sh"],
+)
+
+skytest_test(
+    name = "noreturn_expect_test",
+    binary = ":noreturn_expect_bin",
+    return_code = 1,
+    stderr = [
+        "noreturn_expect.cpp:11:25:.*error:.*ignoring return value of.*expect",
+        "11 |\\s*expect\\(.*\\).*;",
     ],
 )
 

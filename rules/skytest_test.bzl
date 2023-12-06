@@ -9,6 +9,7 @@ def skytest_test(
         srcs = [],
         binary = None,
         stdout = [],
+        stderr = [],
         return_code = 0,
         copts = []):
     """
@@ -22,7 +23,9 @@ def skytest_test(
       binary: string_label
         C++ binary target to use. Cannot be used with `srcs`.
       stdout: string_list
-        Strings to search for in terminal output.
+        Strings to search for in terminal stdout.
+      stderr: string_list
+        Strings to search for in terminal stderr.
       return_code: int
         Expected return code.
       copts: string_list
@@ -58,19 +61,27 @@ echo "set -euo pipefail" > $@
 echo "" >> $@
 echo "binary=$(rootpath {binary})" >> $@
 echo "stdout=({stdout})" >> $@
+echo "stderr=({stderr})" >> $@
 echo "" >> $@
 echo "ret=0" >> $@
-echo "\$$binary 1> log.out || ret=\$$?" >> $@
+echo "(\$$binary | tee log.out) 3>&1 1>&2 2>&3 | tee log.err || ret=\$$?" >> $@
 echo "" >> $@
 echo "[ \$$ret -eq {return_code} ]" >> $@
 echo "for line in \$${{stdout[@]}}; do" >> $@
 echo "  grep -q \"\$$line\" log.out" >> $@
 echo "done" >> $@
+echo "for line in \$${{stderr[@]}}; do" >> $@
+echo "  grep -q \"\$$line\" log.err" >> $@
+echo "done" >> $@
 """.format(
             binary = binary,
             stdout = " ".join(["'{}'".format(line) for line in stdout]),
+            stderr = " ".join(["'{}'".format(line) for line in stderr]),
             return_code = return_code,
         ),
+        tags = ["manual"],
+        visibility = ["//visibility:private"],
+        testonly = True,
     )
 
     native.sh_test(
