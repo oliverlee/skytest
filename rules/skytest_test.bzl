@@ -57,7 +57,7 @@ def skytest_test(
         tools = [binary],
         cmd = r"""
 set -euo pipefail
-echo "set -euo pipefail" > $@
+echo "set -euxo pipefail" > $@
 echo "" >> $@
 echo "binary=$(rootpath {binary})" >> $@
 echo "stdout=({stdout})" >> $@
@@ -67,11 +67,11 @@ echo "ret=0" >> $@
 echo "(\$$binary | tee log.out) 3>&1 1>&2 2>&3 | tee log.err || ret=\$$?" >> $@
 echo "" >> $@
 echo "[ \$$ret -eq {return_code} ]" >> $@
-echo "for line in \$${{stdout[@]}}; do" >> $@
-echo "  grep -q \"\$$line\" log.out" >> $@
+echo "for line in \"\$${{stdout[@]}}\"; do" >> $@
+echo "  grep -a \"\$$line\" log.out" >> $@
 echo "done" >> $@
-echo "for line in \$${{stderr[@]}}; do" >> $@
-echo "  grep -q \"\$$line\" log.err" >> $@
+echo "for line in \"\$${{stderr[@]}}\"; do" >> $@
+echo "  grep -a \"\$$line\" log.err" >> $@
 echo "done" >> $@
 """.format(
             binary = binary,

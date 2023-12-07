@@ -10,20 +10,95 @@
 #include <type_traits>
 #include <utility>
 
+#define SKYTEST_CXX20 (__cplusplus >= 202002L)
+
 namespace skytest {
+
+struct empty_symbol
+{
+  static constexpr auto value = std::string_view{};
+};
+struct notation
+{
+  struct function
+  {};
+  struct infix
+  {};
+};
+template <class Symbol = empty_symbol, class Notation = notation::function>
+struct predicate_format
+{
+  using notation_type = Notation;
+  static constexpr auto symbol = Symbol::value;
+};
+
 namespace detail {
+
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <class F, class G>
-struct and_
-{};
-template <class F, class G>
-struct or_
-{};
 template <class F>
-struct not_
-{};
+constexpr auto predicate_type_name()
+{
+  constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
+
+#ifdef __clang__
+  constexpr auto prefix = std::string_view{"F = "};
+  constexpr auto suffix = std::string_view{"]"};
+#else
+  constexpr auto prefix = std::string_view{"with F = "};
+  constexpr auto suffix = std::string_view{"]"};
+#endif
+
+  const auto lower = full.find(prefix) + prefix.size();
+  const auto upper = full.find(suffix, lower);
+
+  return std::string_view{full.begin() + lower, upper - lower};
+}
+
+template <class F>
+static constexpr auto type_name = predicate_type_name<F>();
+
+template <class F, class G>
+struct and_ : predicate_format<>
+{
+  static constexpr auto name = predicate_type_name<and_>();
+};
+template <class F, class G>
+struct or_ : predicate_format<>
+{
+  static constexpr auto name = predicate_type_name<or_>();
+};
+template <class F>
+struct not_ : predicate_format<>
+{
+  static constexpr auto name = predicate_type_name<not_>();
+};
+
+template <class... Ts>
+struct tuple_fmt
+{
+  const std::tuple<Ts...>& value;
+
+  template <std::size_t... Is>
+  auto& stream_insert(std::index_sequence<Is...>, std::ostream& os) const
+  {
+    std::ignore = std::array<bool, sizeof...(Is)>{
+        (os << (Is == 0 ? "" : ", ") << std::get<Is>(value), true)...};
+    return os;
+  }
+
+  friend auto& operator<<(std::ostream& os, const tuple_fmt& tup)
+  {
+    return tup.stream_insert(std::index_sequence_for<Ts...>{}, os);
+  }
+};
+
+template <class... Ts>
+constexpr auto fmt(const std::tuple<Ts...>& tup)
+{
+  return tuple_fmt<Ts...>{tup};
+}
 
 template <class F, class... Ts>
 struct relation
@@ -35,6 +110,32 @@ struct relation
   bool value;
 
   constexpr operator bool() const { return value; }
+
+  static constexpr auto&
+  print(notation::function, std::ostream& os, const relation& r)
+  {
+    if (const auto symbol = predicate_type::symbol; not symbol.empty()) {
+      os << symbol;
+    } else {
+      os << predicate_type::name << "{}";
+    }
+
+    os << "(" << fmt(r.args) << ")";
+    return os;
+  }
+  static auto& print(notation::infix, std::ostream& os, const relation& r)
+  {
+    static_assert(sizeof...(Ts) == 2);
+
+    os << "(" << std::get<0>(r.args) << " " << predicate_type::symbol << " "
+       << std::get<1>(r.args) << ")";
+    return os;
+  }
+
+  friend auto& operator<<(std::ostream& os, const relation& r)
+  {
+    return print(typename relation::predicate_type::notation_type{}, os, r);
+  }
 
   template <class G, class... Us>
   constexpr friend auto operator and(relation&& lhs, relation<G, Us...>&& rhs)
@@ -56,9 +157,19 @@ struct relation
   }
 };
 
-template <class F>
+template <class F, const std::string_view& Name, class Format>
 struct predicate : F
 {
+  static constexpr auto name = Name;
+  using notation_type = typename Format::notation_type;
+  static constexpr auto symbol = Format::symbol;
+
+  template <
+      class T = F,
+      class = std::enable_if_t<std::is_default_constructible_v<T>>>
+  constexpr predicate()
+  {}
+
   template <class T, class = std::enable_if_t<std::is_constructible_v<F, T&&>>>
   constexpr predicate(T&& f) : F{std::forward<T>(f)}
   {}
@@ -70,31 +181,10 @@ struct predicate : F
   constexpr auto operator()(Ts&&... args) const
   {
     const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
-    return relation<F, remove_cvref_t<Ts>...>{
-        std::tuple<remove_cvref_t<Ts>...>{std::forward<Ts>(args)...}, value};
+    return relation<predicate, std::decay_t<Ts>...>{
+        std::tuple<std::decay_t<Ts>...>{std::forward<Ts>(args)...}, value};
   }
 };
-
-template <class F>
-static constexpr auto predicate_type_name()
-{
-  constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
-
-#ifdef __clang__
-  constexpr auto prefix = std::string_view{"F = "};
-  constexpr auto suffix = std::string_view{"]"};
-#else
-  constexpr auto prefix = std::string_view{"with F = "};
-  constexpr auto suffix = std::string_view{"]"};
-#endif
-
-  const auto lower = full.find(prefix) + prefix.size();
-  const auto upper = full.find(suffix, lower);
-
-  return std::string_view{full.begin() + lower, upper - lower};
-}
-
-class test;
 
 template <class T, class = void>
 struct has_args : std::false_type
@@ -107,32 +197,6 @@ template <class T>
 constexpr auto has_args_v = has_args<T>::value;
 
 inline constexpr auto empty_args = std::tuple<>{};
-
-template <class Relation, std::enable_if_t<has_args_v<Relation>, bool> = true>
-constexpr auto pred_name(const Relation&)
-{
-  return predicate_type_name<typename Relation::predicate_type>();
-}
-template <
-    class Relation,
-    std::enable_if_t<not has_args_v<Relation>, bool> = true>
-constexpr auto pred_name(const Relation&)
-{
-  return std::string_view{};
-}
-
-template <class Relation, std::enable_if_t<has_args_v<Relation>, bool> = true>
-constexpr auto& args(const Relation& r)
-{
-  return r.args;
-}
-template <
-    class Relation,
-    std::enable_if_t<not has_args_v<Relation>, bool> = true>
-constexpr auto& args(const Relation&)
-{
-  return empty_args;
-}
 }  // namespace detail
 
 class source_location
@@ -164,23 +228,100 @@ struct result
   std::optional<bool> compile_time{};
 
   constexpr explicit operator bool() const { return bool(relation); }
-
-  constexpr auto pred_name() const { return detail::pred_name(relation); }
-  constexpr auto& arguments() const { return detail::args(relation); }
 };
 
-template <class F>
-constexpr auto pred(F&& f)
-{
-  return detail::predicate<detail::remove_cvref_t<F>>{std::forward<F>(f)};
-}
+namespace detail {
 
-inline constexpr auto eq = pred(std::equal_to<>{});
-inline constexpr auto ne = pred(std::not_equal_to<>{});
-inline constexpr auto lt = pred(std::less<>{});
-inline constexpr auto gt = pred(std::greater<>{});
-inline constexpr auto le = pred(std::less_equal<>{});
-inline constexpr auto ge = pred(std::greater_equal<>{});
+template <class Format = predicate_format<>>
+struct pred_fn
+{
+  template <class F>
+  constexpr auto operator()(F&& f) const
+  {
+    return detail::predicate<detail::remove_cvref_t<F>, type_name<F>, Format>{
+        std::forward<F>(f)};
+  }
+  template <class T, class F>
+  constexpr auto operator()(T, F&& f) const
+  {
+    return pred_fn<T>{}(std::forward<F>(f));
+  }
+};
+}  // namespace detail
+
+#if SKYTEST_CXX20
+template <std::size_t N>
+struct string_literal
+{
+  std::array<char, N> chars;
+
+  constexpr string_literal(const char (&s)[N])
+  {
+    for (auto i = std::size_t{}; i != N; ++i) {
+      chars[i] = s[i];
+    }
+  }
+  constexpr operator std::string_view() const
+  {
+    return {chars.begin(), chars.size()};
+  }
+};
+template <string_literal symbol>
+struct string_literal_constant
+{
+  static constexpr auto value = std::string_view{symbol};
+};
+template <string_literal symbol>
+constexpr auto infix =
+    predicate_format<string_literal_constant<symbol>, notation::infix>{};
+template <string_literal symbol>
+constexpr auto function =
+    predicate_format<string_literal_constant<symbol>, notation::function>{};
+#endif
+
+namespace detail {
+struct pred_fmt
+{
+  static constexpr struct eq_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{"=="};
+  } eq{};
+  static constexpr struct ne_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{"!="};
+  } ne{};
+  static constexpr struct lt_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{"<"};
+  } lt{};
+  static constexpr struct gt_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{">"};
+  } gt{};
+  static constexpr struct le_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{"<="};
+  } le{};
+  static constexpr struct ge_
+  {
+    using notation_type = notation::infix;
+    static constexpr auto symbol = std::string_view{">="};
+  } ge{};
+};
+}  // namespace detail
+
+inline constexpr auto pred = detail::pred_fn<>{};
+inline constexpr auto eq = pred(detail::pred_fmt::eq, std::equal_to<>{});
+inline constexpr auto ne = pred(detail::pred_fmt::ne, std::not_equal_to<>{});
+inline constexpr auto lt = pred(detail::pred_fmt::lt, std::less<>{});
+inline constexpr auto gt = pred(detail::pred_fmt::gt, std::greater<>{});
+inline constexpr auto le = pred(detail::pred_fmt::le, std::less_equal<>{});
+inline constexpr auto ge = pred(detail::pred_fmt::ge, std::greater_equal<>{});
 
 struct summary
 {
@@ -211,15 +352,6 @@ class default_printer
       return os;
     }
   };
-
-  template <class... Ts, std::size_t... Is>
-  auto
-  print_args(const std::tuple<Ts...>& args, std::index_sequence<Is...>) const
-      -> void
-  {
-    std::ignore = std::array<bool, sizeof...(Is)>{
-        ((os_ << (Is == 0 ? "" : ", ") << std::get<Is>(args)), true)...};
-  }
 
 public:
   default_printer(std::ostream& os) : os_{os} {}
@@ -261,15 +393,7 @@ public:
 
     if (not r) {
       p.os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
-
-      constexpr auto N =
-          std::tuple_size_v<detail::remove_cvref_t<decltype(r.arguments())>>;
-      if (N) {
-        p.os_ << r.pred_name() << "{}(";
-        p.print_args(r.arguments(), std::make_index_sequence<N>{});
-        p.os_ << ")";
-      }
-
+      p.os_ << colors::fail << colors::dim << r.relation << colors::none;
       r.msg(p.os_);
       p.os_ << "\n";
     }
@@ -396,9 +520,9 @@ public:
 }  // namespace detail
 
 namespace literals {
-constexpr auto operator""_test(const char* name, std::size_t)
+constexpr auto operator""_test(const char* name, std::size_t len)
 {
-  return detail::test{name};
+  return detail::test{{name, len}};
 }
 }  // namespace literals
 }  // namespace skytest
