@@ -15,32 +15,63 @@ namespace detail {
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <class F, class... Args>
+template <class F, class G>
+struct and_
+{};
+template <class F, class G>
+struct or_
+{};
+template <class F>
+struct not_
+{};
+
+template <class F, class... Ts>
 struct relation
 {
   using predicate_type = F;
-  using arguments_type = std::tuple<Args...>;
+  using arguments_type = std::tuple<Ts...>;
 
   arguments_type args;
   bool value;
 
   constexpr operator bool() const { return value; }
+
+  template <class G, class... Us>
+  constexpr friend auto operator and(relation&& lhs, relation<G, Us...>&& rhs)
+  {
+    return relation<and_<F, G>, Ts..., Us...>{
+        std::tuple_cat(std::move(lhs.args), std::move(rhs.args)),
+        lhs.value and rhs.value};
+  }
+  template <class G, class... Us>
+  constexpr friend auto operator or(relation&& lhs, relation<G, Us...>&& rhs)
+  {
+    return relation<or_<F, G>, Ts..., Us...>{
+        std::tuple_cat(std::move(lhs.args), std::move(rhs.args)),
+        lhs.value or rhs.value};
+  }
+  constexpr friend auto operator not(relation&& r)
+  {
+    return relation<not_<F>, Ts...>{std::move(r.args), not r.value};
+  }
 };
 
 template <class F>
 struct predicate : F
 {
-  template <class G, class = std::enable_if_t<std::is_constructible_v<F, G&&>>>
-  constexpr predicate(G&& g) : F{std::forward<G>(g)}
+  template <class T, class = std::enable_if_t<std::is_constructible_v<F, T&&>>>
+  constexpr predicate(T&& f) : F{std::forward<T>(f)}
   {}
 
-  template <class... Ts>
-  constexpr auto operator()(Ts&&... args) const -> std::remove_reference_t<
-      decltype(bool(std::declval<const F&>()(std::as_const(args)...)),
-               std::declval<relation<F, remove_cvref_t<Ts>...>>())>
+  template <
+      class... Ts,
+      class =
+          std::enable_if_t<std::is_invocable_r_v<bool, const F&, const Ts&...>>>
+  constexpr auto operator()(Ts&&... args) const
   {
     const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
-    return {std::tuple<remove_cvref_t<Ts>...>{args...}, value};
+    return relation<F, remove_cvref_t<Ts>...>{
+        std::tuple<remove_cvref_t<Ts>...>{std::forward<Ts>(args)...}, value};
   }
 };
 
