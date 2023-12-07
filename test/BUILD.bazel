@@ -39,6 +39,16 @@ skytest_test(
 )
 
 skytest_test(
+    name = "expect_message_test",
+    srcs = ["expect_message_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "hello, world!",
+        "got: 1",
+    ],
+)
+
+skytest_test(
     name = "comparison_test",
     srcs = ["comparison_test.cpp"],
     return_code = 1,

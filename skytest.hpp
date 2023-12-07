@@ -123,10 +123,11 @@ public:
   constexpr auto line() const noexcept { return line_; }
 };
 
-template <class Relation>
+template <class Relation, class Message>
 struct result
 {
   Relation relation;
+  Message msg;
   source_location source;
   std::string_view name{"unknown"};
   std::optional<bool> compile_time{};
@@ -136,14 +137,6 @@ struct result
   constexpr auto pred_name() const { return detail::pred_name(relation); }
   constexpr auto& arguments() const { return detail::args(relation); }
 };
-
-template <class Relation>
-[[nodiscard]]
-constexpr auto
-expect(Relation r, source_location sl = source_location::current())
-{
-  return result<Relation>{r, sl};
-}
 
 template <class F>
 constexpr auto pred(F&& f)
@@ -200,8 +193,8 @@ class default_printer
 public:
   default_printer(std::ostream& os) : os_{os} {}
 
-  template <class R>
-  friend auto& operator<<(default_printer& p, const result<R>& r)
+  template <class R, class M>
+  friend auto& operator<<(default_printer& p, const result<R, M>& r)
   {
     p.os_ << "test `" << r.name << "`...";
 
@@ -246,6 +239,7 @@ public:
         p.os_ << ")";
       }
 
+      r.msg(p.os_);
       p.os_ << "\n";
     }
 
@@ -291,11 +285,11 @@ public:
     std::exit(summary_.fail != 0);
   }
 
-  template <class R>
-  auto report(const result<R>& exp) & -> void
+  template <class R, class M>
+  auto report(const result<R, M>& r) & -> void
   {
-    printer_ << exp;
-    ++(exp ? summary_.pass : summary_.fail);
+    printer_ << r;
+    ++(r ? summary_.pass : summary_.fail);
   }
 };
 
@@ -305,10 +299,27 @@ struct override
 template <class = override>
 auto cfg = runner<default_printer>{std::cout};
 
+struct empty_message
+{
+  template <class T>
+  constexpr auto operator()(T&) const -> void
+  {}
+};
+
+template <class Relation, class Message = empty_message>
+[[nodiscard]]
+constexpr auto expect(
+    Relation r,
+    Message msg = {},
+    source_location sl = source_location::current())
+{
+  return result<Relation, Message>{std::move(r), std::move(msg), sl};
+}
+
 namespace detail {
 
-template <class R>
-auto is_result_(result<R>) -> std::true_type;
+template <class R, class M>
+auto is_result_(result<R, M>) -> std::true_type;
 template <class T>
 auto is_result_(const T&) -> std::false_type;
 
