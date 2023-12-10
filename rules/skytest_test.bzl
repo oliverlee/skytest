@@ -57,21 +57,28 @@ def skytest_test(
         tools = [binary],
         cmd = r"""
 set -euo pipefail
-echo "set -euxo pipefail" > $@
+echo "set -euo pipefail" > $@
+echo "" >> $@
+echo "OPTS=\$$([[ \"\$${{VERBOSE:-0}}\" -eq 1 ]] && echo \"-a\" || echo \"-aq\")" >> $@
+echo "[[ \"\$${{VERBOSE:-0}}\" -eq 1 ]] && set -x || true" >> $@
 echo "" >> $@
 echo "binary=$(rootpath {binary})" >> $@
 echo "stdout=({stdout})" >> $@
 echo "stderr=({stderr})" >> $@
+echo "" >> $@
+echo "contains () {{" >> $@
+echo "  grep \"\$$OPTS\" \"\$$1\" \"\$$2\" || (echo ERROR: \\\"\"\$$line\"\\\" not found && false)" >> $@
+echo "}}" >> $@
 echo "" >> $@
 echo "ret=0" >> $@
 echo "(\$$binary | tee log.out) 3>&1 1>&2 2>&3 | tee log.err || ret=\$$?" >> $@
 echo "" >> $@
 echo "[ \$$ret -eq {return_code} ]" >> $@
 echo "for line in \"\$${{stdout[@]}}\"; do" >> $@
-echo "  grep -a \"\$$line\" log.out" >> $@
+echo "  contains \"\$$line\" log.out" >> $@
 echo "done" >> $@
 echo "for line in \"\$${{stderr[@]}}\"; do" >> $@
-echo "  grep -a \"\$$line\" log.err" >> $@
+echo "  contains \"\$$line\" log.err" >> $@
 echo "done" >> $@
 """.format(
             binary = binary,
