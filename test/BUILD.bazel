@@ -1,13 +1,6 @@
 load("//rules:skytest_test.bzl", "skytest_test")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
-load(
-    "@local_config_info//:defs.bzl",
-    "BAZEL_BIN",
-    "BAZEL_EXTERNAL_DIR",
-    "BAZEL_WORKSPACE_ROOT",
-    "XDG_CACHE_HOME",
-)
+load("//rules:sh_binary_template.bzl", "sh_binary_template")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
 skytest_test(
     name = "pass_test",
@@ -114,7 +107,10 @@ skytest_test(
 skytest_test(
     name = "pred_notation_test",
     srcs = ["pred_notation_test.cpp"],
-    copts = ["-std=c++20"],
+    cxxstd = [
+        20,
+        23,
+    ],
     return_code = 1,
     stdout = [
         "(1 .*@.* 2)",
@@ -128,7 +124,10 @@ skytest_test(
 skytest_test(
     name = "constexpr_test",
     srcs = ["constexpr_test.cpp"],
-    copts = ["-std=c++20"],
+    cxxstd = [
+        20,
+        23,
+    ],
     return_code = 1,
     stdout = [
         "constexpr pass.*\\[CONSTEXPR PASS\\]",
@@ -141,46 +140,24 @@ skytest_test(
     ],
 )
 
-expand_template(
-    name = "noreturn_expect_sh",
-    out = "noreturn_expect.sh",
-    substitutions = {
-        "$BAZEL_BIN": BAZEL_BIN,
-        "$BAZEL_EXTERNAL_DIR": BAZEL_EXTERNAL_DIR,
-        "$BAZEL_WORKSPACE_ROOT": BAZEL_WORKSPACE_ROOT,
-        "$XDG_CACHE_HOME": XDG_CACHE_HOME,
-    },
-    template = "noreturn_expect.sh.tmpl",
-)
-
-sh_binary(
-    name = "noreturn_expect_bin",
-    srcs = ["noreturn_expect.sh"],
-)
-
-skytest_test(
-    name = "noreturn_expect_test",
-    binary = ":noreturn_expect_bin",
-    return_code = 1,
-    stderr = [
-        "noreturn_expect.cpp:11:25:.*error:.*ignoring return value of.*expect",
-        "11 |\\s*expect\\(.*\\).*;",
-    ],
-)
-
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],
 )
 
-cc_binary(
-    name = "null_printer",
-    srcs = ["null_printer.cpp"],
+skytest_test(
+    name = "null_printer_test",
+    srcs = ["null_printer_test.cpp"],
     malloc = ":no_malloc",
-    deps = ["//:skytest"],
 )
 
 skytest_test(
-    name = "null_printer_test",
-    binary = ":null_printer",
+    name = "noreturn_expect_test",
+    srcs = ["noreturn_expect.sh.tmpl"],
+    binary_type = sh_binary_template,
+    return_code = 1,
+    stderr = [
+        "noreturn_expect.cpp:11:25:.*error:.*ignoring return value of.*expect",
+        "11 |\\s*expect\\(.*\\).*;",
+    ],
 )

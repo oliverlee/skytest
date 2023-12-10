@@ -54,11 +54,12 @@ cc_binary(
     name = "noreturn_expect",
     srcs = ["noreturn_expect.cpp"],
     copts = [
-        "-std=c++17",
+        "-std=c++$CC_BINARY_CXXSTD",
         "-Werror",
         "-Wall",
         "-Wextra",
     ],
+    malloc = "$CC_BINARY_MALLOC",
     deps = ["@skytest"],
 )
 EOF
@@ -88,4 +89,5 @@ $BAZEL_BIN \
     --nosystem_rc \
     --nohome_rc \
     build \
+    -s \
     //:noreturn_expect
