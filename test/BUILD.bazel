@@ -124,19 +124,33 @@ skytest_test(
 skytest_test(
     name = "constexpr_test",
     srcs = ["constexpr_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "constexpr pass.*\\[CONSTEXPR PASS\\]",
+        "constexpr fail.*\\[CONSTEXPR FAIL\\].*cpp:19",
+        "runtime pass.*\\[PASS\\]",
+        "runtime fail.*\\[FAIL\\].*cpp:27",
+        "closure with capture.*\\[PASS\\]",
+        "function object with member value 1.*\\[PASS\\]",
+        "function object with member value 2.*\\[FAIL\\].*cpp:11",
+        "repeated closure 1.*\\[CONSTEXPR PASS\\]",
+        "repeated closure 2.*\\[CONSTEXPR PASS\\]",
+        "6 tests passed.*3 tests failed",
+    ],
+)
+
+skytest_test(
+    name = "constexpr_runtime_diverge_test",
+    srcs = ["constexpr_runtime_diverge_test.cpp"],
     cxxstd = [
         20,
         23,
     ],
     return_code = 1,
     stdout = [
-        "constexpr pass.*\\[CONSTEXPR PASS\\]",
-        "constexpr fail.*\\[CONSTEXPR FAIL\\].*cpp:14",
-        "runtime pass.*\\[PASS\\]",
-        "runtime fail.*\\[FAIL\\].*cpp:22",
         "runtime pass, constexpr fail.*\\[PASS\\].*(CONSTEXPR FAIL)",
-        "runtime fail, constexpr pass.*\\[FAIL\\].*(CONSTEXPR PASS).*cpp:35",
-        "3 tests passed.*3 tests failed",
+        "runtime fail, constexpr pass.*\\[FAIL\\].*(CONSTEXPR PASS).*cpp:21",
+        "1 test passed.*1 test failed",
     ],
 )
 
