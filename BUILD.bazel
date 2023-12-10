@@ -14,6 +14,23 @@ filegroup(
 
 cc_library(
     name = "skytest",
+    srcs = [
+        "src/cfg.hpp",
+        "src/default_printer.hpp",
+        "src/detail/predicate.hpp",
+        "src/detail/relation.hpp",
+        "src/detail/remove_cvref.hpp",
+        "src/detail/tuple_fmt.hpp",
+        "src/detail/type_name.hpp",
+        "src/expect.hpp",
+        "src/pred.hpp",
+        "src/result.hpp",
+        "src/runner.hpp",
+        "src/source_location.hpp",
+        "src/test.hpp",
+        "src/utility.hpp",
+        "src/version.hpp",
+    ],
     hdrs = ["skytest.hpp"],
     include_prefix = "skytest",
     visibility = ["//visibility:public"],
