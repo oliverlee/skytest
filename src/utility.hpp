@@ -8,6 +8,8 @@ struct notation
 {
   struct function
   {};
+  struct prefix
+  {};
   struct infix
   {};
 };

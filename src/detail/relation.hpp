@@ -4,27 +4,34 @@
 #include "src/detail/type_name.hpp"
 #include "src/utility.hpp"
 
+#include <functional>
 #include <ostream>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
 namespace skytest {
 namespace detail {
 
-template <class F, class G>
-struct and_ : predicate_format<>
+struct and_
 {
   static constexpr auto name = type_name<and_>;
+  using notation_type = notation::infix;
+  static constexpr auto symbol = std::string_view{"and"};
 };
-template <class F, class G>
-struct or_ : predicate_format<>
+
+struct or_
 {
   static constexpr auto name = type_name<or_>;
+  using notation_type = notation::infix;
+  static constexpr auto symbol = std::string_view{"or"};
 };
-template <class F>
-struct not_ : predicate_format<>
+
+struct not_
 {
   static constexpr auto name = type_name<not_>;
+  using notation_type = notation::prefix;
+  static constexpr auto symbol = std::string_view{"not"};
 };
 
 template <class F, class... Ts>
@@ -50,6 +57,13 @@ struct relation
     os << "(" << fmt(r.args) << ")";
     return os;
   }
+  static auto& print(notation::prefix, std::ostream& os, const relation& r)
+  {
+    static_assert(sizeof...(Ts) != 0);
+
+    os << "(" << predicate_type::symbol << " " << fmt(r.args) << ")";
+    return os;
+  }
   static auto& print(notation::infix, std::ostream& os, const relation& r)
   {
     static_assert(sizeof...(Ts) == 2);
@@ -67,20 +81,24 @@ struct relation
   template <class G, class... Us>
   constexpr friend auto operator and(relation&& lhs, relation<G, Us...>&& rhs)
   {
-    return relation<and_<F, G>, Ts..., Us...>{
-        std::tuple_cat(std::move(lhs.args), std::move(rhs.args)),
-        lhs.value and rhs.value};
+    const auto result = std::as_const(lhs) and std::as_const(rhs);
+
+    return relation<and_, relation, relation<G, Us...>>{
+        {std::move(lhs), std::move(rhs)}, result};
   }
   template <class G, class... Us>
   constexpr friend auto operator or(relation&& lhs, relation<G, Us...>&& rhs)
   {
-    return relation<or_<F, G>, Ts..., Us...>{
-        std::tuple_cat(std::move(lhs.args), std::move(rhs.args)),
-        lhs.value or rhs.value};
+    const auto result = std::as_const(lhs) or std::as_const(rhs);
+
+    return relation<or_, relation, relation<G, Us...>>{
+        {std::move(lhs), std::move(rhs)}, result};
   }
   constexpr friend auto operator not(relation&& r)
   {
-    return relation<not_<F>, Ts...>{std::move(r.args), not r.value};
+    const auto result = not std::as_const(r);
+
+    return relation<not_, relation>{{std::move(r)}, result};
   }
 };
 

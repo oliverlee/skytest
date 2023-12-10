@@ -23,6 +23,10 @@ auto main() -> int
     return expect(not eq(x, x) and not eq(y, y) and not eq(z, z));
   };
 
+  "[and+and] fails"_test = [] {
+    return expect(eq(x, x) and (eq(y, z) and eq(z, z)));
+  };
+
   "[or] first passes"_test = [] { return expect(eq(x, y) or lt(y, z)); };
   "[or] second passes"_test = [] { return expect(eq(x, y) or lt(y, z)); };
 }

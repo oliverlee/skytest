@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string_view>
+#include <type_traits>
 
 namespace skytest {
 
@@ -33,8 +34,55 @@ class default_printer
     }
   };
 
+  template <class Relation>
+  auto& print(std::true_type, const Relation& r) &
+  {
+    const auto os = [&os = this->os_, &r]() -> auto& {
+      os << (r ? colors::pass : colors::fail) << colors::dim;
+      return os;
+    };
+
+    os() << "(";
+    (*this) << std::get<0>(r.args);
+
+    os() << " " << Relation::predicate_type::symbol << " ";
+    (*this) << std::get<1>(r.args);
+
+    os() << ")" << colors::none;
+
+    return *this;
+  }
+  template <class Relation>
+  auto& print(std::false_type, const Relation& r) &
+  {
+    os_ << (r ? colors::pass : colors::fail) << colors::dim << r
+        << colors::none;
+
+    return *this;
+  }
+
 public:
   default_printer(std::ostream& os) : os_{os} {}
+
+  template <class Relation>
+  friend auto operator<<(default_printer& p, const Relation& r)
+      -> decltype(std::declval<typename Relation::predicate_type>(), p)
+  {
+    static constexpr auto infix = std::is_same_v<
+        notation::infix,
+        typename Relation::predicate_type::notation_type>;
+
+    static constexpr auto color_args =
+        Relation::predicate_type::symbol == "and";
+
+    return p.print(std::bool_constant < infix and color_args > {}, r);
+  }
+
+  friend auto& operator<<(default_printer& p, bool b)
+  {
+    p.print(std::false_type{}, b);
+    return p;
+  }
 
   template <class R, class M>
   friend auto& operator<<(default_printer& p, const result<R, M>& r)
@@ -73,7 +121,7 @@ public:
 
     if (not r) {
       p.os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
-      p.os_ << colors::fail << colors::dim << r.relation << colors::none;
+      p << r.relation;
       r.msg(p.os_);
       p.os_ << "\n";
     }
