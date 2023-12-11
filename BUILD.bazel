@@ -25,6 +25,7 @@ cc_library(
         "src/expect.hpp",
         "src/pred.hpp",
         "src/result.hpp",
+        "src/rope.hpp",
         "src/runner.hpp",
         "src/source_location.hpp",
         "src/test.hpp",

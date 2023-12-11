@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/rope.hpp"
 #include "src/source_location.hpp"
 
 #include <optional>
@@ -13,7 +14,7 @@ struct result
   Relation relation;
   Message msg;
   source_location source;
-  std::string_view name{"unknown"};
+  rope_ref name{};
   std::optional<bool> compile_time{};
 
   constexpr explicit operator bool() const { return bool(relation); }

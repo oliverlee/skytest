@@ -1,10 +1,15 @@
 #pragma once
 
+#include "src/detail/type_name.hpp"
 #include "src/result.hpp"
+#include "src/rope.hpp"
 
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -40,9 +45,13 @@ struct static_closure : F
   constexpr static_closure() : F{f} {}
 };
 
+template <class... Args>
+class parameterized_test;
+
+template <std::size_t N>
 class test
 {
-  std::string_view name_;
+  rope<N> name_;
 
   template <
       class F,
@@ -58,7 +67,7 @@ class test
   }
 
 public:
-  constexpr explicit test(std::string_view name) : name_{name} {}
+  constexpr explicit test(rope<N> name) : name_{name} {}
 
   template <
       class F,
@@ -81,6 +90,52 @@ public:
   {
     assign_impl<F, runtime_only_result>(func);
   }
+
+  template <class... Args>
+  constexpr friend auto operator*(test&& t, std::tuple<Args...> types)
+  {
+    static_assert(
+        N == 1,
+        "parameterization of an already "
+        "parameterized test");
+    return detail::parameterized_test<Args...>{t.name_, std::move(types)};
+  }
+};
+
+template <class... Args>
+class parameterized_test
+{
+  std::tuple<Args...> args_;
+  rope<1> basename_;
+
+  template <std::size_t I>
+  using arg_type_t = std::tuple_element_t<I, std::tuple<Args...>>;
+
+  template <std::size_t... Is, class F>
+  constexpr auto assign_impl(std::index_sequence<Is...>, const F& func)
+  {
+    std::ignore = std::array<bool, sizeof...(Is)>{(
+        test{rope<4>{basename_, " <", type_name<arg_type_t<Is>>, ">"}} =
+            [&arg = std::get<Is>(args_), &func] { return func(arg); },
+        true)...};
+  }
+
+public:
+  constexpr explicit parameterized_test(
+      rope<1> basename, std::tuple<Args...> args)
+      : args_{std::move(args)}, basename_{basename}
+  {}
+
+  template <
+      class F,
+      class = std::enable_if_t<(
+          is_result_v<decltype(std::declval<const F&>()(
+              std::declval<const Args&>()))> and
+          ...)>>
+  constexpr auto operator=(const F& func) && -> void
+  {
+    assign_impl(std::index_sequence_for<Args...>{}, func);
+  }
 };
 
 }  // namespace detail
@@ -88,7 +143,7 @@ public:
 namespace literals {
 constexpr auto operator""_test(const char* name, std::size_t len)
 {
-  return detail::test{{name, len}};
+  return detail::test{rope<1>{std::string_view{name, len}}};
 }
 }  // namespace literals
 }  // namespace skytest

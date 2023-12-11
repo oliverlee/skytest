@@ -154,6 +154,17 @@ skytest_test(
     ],
 )
 
+skytest_test(
+    name = "type_parameterized_test",
+    srcs = ["type_parameterized_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "typed.*<float>.*FAIL",
+        "typed.*<std::complex<double>>.*FAIL",
+        "typed.*<std::nullptr_t>.*FAIL",
+    ],
+)
+
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],
