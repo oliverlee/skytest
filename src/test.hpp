@@ -3,6 +3,7 @@
 #include "src/detail/type_name.hpp"
 #include "src/result.hpp"
 #include "src/rope.hpp"
+#include "src/version.hpp"
 
 #include <array>
 #include <cassert>
@@ -14,6 +15,23 @@
 #include <utility>
 
 namespace skytest {
+
+#if SKYTEST_CXX20
+using std::type_identity;
+#else
+template <class T>
+struct type_identity
+{
+  using type = T;
+};
+#endif
+
+struct param
+{
+  template <class... Ts>
+  static constexpr auto types = std::tuple<type_identity<Ts>...>{};
+};
+
 namespace detail {
 
 template <class R, class M>
@@ -48,6 +66,10 @@ struct static_closure : F
 template <class... Args>
 class parameterized_test;
 
+template <class T>
+constexpr auto is_static_closure_constructible_v =
+    std::is_empty_v<T> and std::is_copy_constructible_v<T>;
+
 template <std::size_t N>
 class test
 {
@@ -72,7 +94,17 @@ public:
   template <
       class F,
       std::enable_if_t<
-          std::is_empty_v<F> and
+          not is_static_closure_constructible_v<F> and
+              is_result_v<decltype(std::declval<const F&>()())>,
+          bool> = true>
+  auto operator=(const F& func) && -> void
+  {
+    assign_impl<F, runtime_only_result>(func);
+  }
+  template <
+      class F,
+      std::enable_if_t<
+          is_static_closure_constructible_v<F> and
               is_result_v<decltype(std::declval<const F&>()())>,
           bool> = true>
   auto operator=(const F& func) && -> void
@@ -80,61 +112,106 @@ public:
     static const auto f = func;
     assign_impl(static_closure<f>{});
   }
-  template <
-      class F,
-      std::enable_if_t<
-          not std::is_empty_v<F> and
-              is_result_v<decltype(std::declval<const F&>()())>,
-          bool> = true>
-  auto operator=(const F& func) && -> void
-  {
-    assign_impl<F, runtime_only_result>(func);
-  }
 
   template <class... Args>
-  constexpr friend auto operator*(test&& t, std::tuple<Args...> types)
+  constexpr friend auto operator*(test&& t, const std::tuple<Args...>& types)
   {
     static_assert(
         N == 1,
         "parameterization of an already "
         "parameterized test");
-    return detail::parameterized_test<Args...>{t.name_, std::move(types)};
+    return detail::parameterized_test<Args...>{t.name_, types};
+  }
+};
+
+template <std::size_t I>
+using constant = std::integral_constant<std::size_t, I>;
+
+template <class F, class Tuple, class = void>
+struct bind_args
+{
+  const F& func;
+  const Tuple& args;
+
+  template <std::size_t I>
+  constexpr auto operator[](constant<I>) const
+  {
+    return [this] { return func(std::get<I>(args)); };
+  }
+};
+
+template <const auto& f, class... Args>
+struct bind_args<
+    static_closure<f>,
+    std::tuple<Args...>,
+    std::enable_if_t<(std::is_empty_v<Args> and ...)>>
+{
+  template <std::size_t I>
+  constexpr auto operator[](constant<I>) const
+  {
+    return [] {
+      const auto args = std::tuple<Args...>{};
+      return static_closure<f>{}(std::get<I>(args));
+    };
   }
 };
 
 template <class... Args>
 class parameterized_test
 {
-  std::tuple<Args...> args_;
+  using args_type = std::tuple<Args...>;
+  const args_type& args_;
   rope<1> basename_;
 
   template <std::size_t I>
-  using arg_type_t = std::tuple_element_t<I, std::tuple<Args...>>;
+  using arg_type_t = std::tuple_element_t<I, args_type>;
 
-  template <std::size_t... Is, class F>
-  constexpr auto assign_impl(std::index_sequence<Is...>, const F& func)
+  template <std::size_t... Is, class G>
+  auto assign_impl(std::index_sequence<Is...>, const G& g)
   {
-    std::ignore = std::array<bool, sizeof...(Is)>{(
-        test{rope<4>{basename_, " <", type_name<arg_type_t<Is>>, ">"}} =
-            [&arg = std::get<Is>(args_), &func] { return func(arg); },
-        true)...};
+    std::ignore =
+        ((test{rope<4>{basename_, " <", type_name<arg_type_t<Is>>, ">"}} =
+              g[constant<Is>{}],
+          true) and
+         ...);
   }
 
 public:
   constexpr explicit parameterized_test(
-      rope<1> basename, std::tuple<Args...> args)
+      rope<1> basename, const std::tuple<Args...>& args)
       : args_{std::move(args)}, basename_{basename}
   {}
 
   template <
       class F,
-      class = std::enable_if_t<(
-          is_result_v<decltype(std::declval<const F&>()(
-              std::declval<const Args&>()))> and
-          ...)>>
-  constexpr auto operator=(const F& func) && -> void
+      std::enable_if_t<
+          not(is_static_closure_constructible_v<F> and
+              (std::is_empty_v<Args> and ...)) and
+              (is_result_v<decltype(std::declval<const F&>()(
+                   std::declval<const Args&>()))> and
+               ...),
+          bool> = true>
+  auto operator=(const F& func) && -> void
   {
-    assign_impl(std::index_sequence_for<Args...>{}, func);
+    assign_impl(
+        std::index_sequence_for<Args...>{},
+        bind_args<F, args_type>{func, args_});
+  }
+  template <
+      class F,
+      std::enable_if_t<
+          is_static_closure_constructible_v<F> and
+              (std::is_empty_v<Args> and ...) and
+              (is_result_v<decltype(std::declval<const F&>()(
+                   std::declval<const Args&>()))> and
+               ...),
+          bool> = true>
+  auto operator=(const F& func) && -> void
+  {
+    static const auto f = func;
+    assign_impl(
+        std::index_sequence_for<Args...>{},
+        bind_args<static_closure<f>, args_type>{});
   }
 };
 

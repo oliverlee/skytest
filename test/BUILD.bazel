@@ -162,6 +162,9 @@ skytest_test(
         "typed.*<float>.*FAIL",
         "typed.*<std::complex<double>>.*FAIL",
         "typed.*<std::nullptr_t>.*FAIL",
+        "typed.*<.*type_identity<float>>.*CONSTEXPR PASS",
+        "typed.*<.*type_identity<std::complex<double> \\?>>.*CONSTEXPR PASS",
+        "typed.*<.*type_identity<std::nullptr_t>>.*CONSTEXPR PASS",
     ],
 )
 
