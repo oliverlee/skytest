@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/detail/priority.hpp"
 #include "src/result.hpp"
 #include "src/utility.hpp"
 
@@ -12,6 +13,9 @@ namespace skytest {
 
 class default_printer
 {
+  template <int N>
+  using priority = detail::priority<N>;
+
   std::ostream& os_;
 
   struct colors
@@ -72,35 +76,24 @@ class default_printer
     os << msg;
   }
 
-public:
-  default_printer(std::ostream& os) : os_{os} {}
-
-  template <class Relation>
-  friend auto operator<<(default_printer& p, const Relation& r)
-      -> decltype(std::declval<typename Relation::predicate_type>(), p)
+  auto stream_impl(priority<4>, const summary& s) -> void
   {
-    static constexpr auto infix = std::is_same_v<
-        notation::infix,
-        typename Relation::predicate_type::notation_type>;
+    if (s.fail != 0) {
+      os_ << tests{s.pass} << " passed | " << colors::fail << tests{s.fail}
+          << " failed" << colors::none;
+    } else {
+      os_ << colors::pass << "all tests passed" << colors::none << " ("
+          << tests{s.pass} << ")";
+    }
 
-    static constexpr auto color_args =
-        Relation::predicate_type::symbol == "and";
-
-    return p.print(std::bool_constant < infix and color_args > {}, r);
+    os_ << "\n";
   }
-
-  friend auto& operator<<(default_printer& p, bool b)
-  {
-    p.print(std::false_type{}, b);
-    return p;
-  }
-
   template <class R, class M>
-  friend auto& operator<<(default_printer& p, const result<R, M>& r)
+  auto stream_impl(priority<3>, const result<R, M>& r) -> void
   {
-    p.os_ << "test `" << r.name << "`...";
+    os_ << "test `" << r.name << "`...";
 
-    [&os = p.os_, runtime = r, compile_time = r.compile_time] {
+    [&os = os_, runtime = r, compile_time = r.compile_time] {
       if (runtime and compile_time == true) {
         os << colors::pass << "[CONSTEXPR PASS]";
         return;
@@ -128,33 +121,45 @@ public:
         return;
       }
     }();
-    p.os_ << colors::none;
+    os_ << colors::none;
 
     if (not r) {
-      p.os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
-      p << r.relation;
-      p.os_ << "\n";
-      display(p.os_, r.msg);
-      p.os_ << "\n";
+      os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
+      *this << r.relation;
+      os_ << "\n";
+      display(os_, r.msg);
+      os_ << "\n";
     }
 
-    p.os_ << "\n";
+    os_ << "\n";
+  }
+  template <class Relation>
+  auto stream_impl(priority<2>, const Relation& r)
+      -> decltype(std::declval<typename Relation::predicate_type>(), void())
+  {
+    static constexpr auto infix = std::is_same_v<
+        notation::infix,
+        typename Relation::predicate_type::notation_type>;
 
-    return p;
+    static constexpr auto color_args =
+        Relation::predicate_type::symbol == "and";
+
+    print(std::bool_constant < infix and color_args > {}, r);
+  }
+  auto stream_impl(priority<1>, bool b) -> void { print(std::false_type{}, b); }
+  template <class T>
+  auto stream_impl(priority<0>, const T& t) -> void
+  {
+    os_ << t;
   }
 
-  friend auto& operator<<(default_printer& p, const summary& s)
+public:
+  default_printer(std::ostream& os) : os_{os} {}
+
+  template <class T>
+  friend auto& operator<<(default_printer& p, const T& t)
   {
-    if (s.fail != 0) {
-      p.os_ << tests{s.pass} << " passed | " << colors::fail << tests{s.fail}
-            << " failed" << colors::none;
-    } else {
-      p.os_ << colors::pass << "all tests passed" << colors::none << " ("
-            << tests{s.pass} << ")";
-    }
-
-    p.os_ << "\n";
-
+    p.stream_impl(detail::priority<4>{}, t);
     return p;
   }
 };

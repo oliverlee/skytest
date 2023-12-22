@@ -15,6 +15,7 @@ filegroup(
 cc_library(
     name = "skytest",
     srcs = [
+        "src/aborts.hpp",
         "src/cfg.hpp",
         "src/default_printer.hpp",
         "src/detail/is_defined.hpp",

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/aborts.hpp"
 #include "src/cfg.hpp"
 #include "src/default_printer.hpp"
 #include "src/expect.hpp"

@@ -221,6 +221,22 @@ skytest_test(
     ],
 )
 
+skytest_test(
+    name = "aborts_test",
+    srcs = ["aborts_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "aborts.*PASS",
+        "does not abort.*FAIL",
+        "exited: 0",
+        "terminates due to sigsegv.*FAIL",
+        "signal: SIGSEGV",
+        "exits without abort.*FAIL",
+        "exited: 1",
+        "1 test passed.*3 tests failed",
+    ],
+)
+
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],
