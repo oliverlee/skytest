@@ -51,6 +51,22 @@ Checks: >
     # too many false positives,
     -misc-include-cleaner,
 
+    # doesn't work with auto&,
+    -modernize-use-trailing-return-type,
+
+    # there are magic numbers in tests,
+    -readability-magic-numbers,
+
+    # hinnant style special member functions,
+    -cppcoreguidelines-special-member-functions,
+
+    # references are stored in short-lived objects that only live,
+    # until the end of the enclosing expression,
+    -cppcoreguidelines-avoid-const-or-ref-data-members,
+
+    # this library defines a DSL,
+    -misc-unconventional-assign-operator,
+
 CheckOptions:
     - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
       value: true

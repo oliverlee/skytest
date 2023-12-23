@@ -20,7 +20,8 @@ def skytest_test(
         cxxstd = [17, 20, 23],
         stdout = [],
         stderr = [],
-        return_code = 0):
+        return_code = 0,
+        **kwargs):
     """
     Runs a skytest unit test and checks the return code and output to stdout.
 
@@ -43,6 +44,9 @@ def skytest_test(
         Strings to search for in terminal stderr.
       return_code: int
         Expected return code.
+
+      **kwargs: dict
+        additional args passed to the underlying binary
     """
 
     # args are passed to a genrule instead of directly to an sh_test to avoid
@@ -97,8 +101,8 @@ echo "done" >> $@
 
         if binary_type == cc_binary:
             binary_kwargs = {
-                "deps": ["//:skytest"],
-                "copts": ["-std=c++" + std],
+                "deps": kwargs.get("deps", []) + ["//:skytest"],
+                "copts": kwargs.get("copts", []) + ["-std=c++" + std],
                 "malloc": malloc,
             }
         elif binary_type == sh_binary_template:
@@ -113,14 +117,13 @@ echo "done" >> $@
                 },
             }
         else:
-            binary_kwargs = {}
             fail("unhandled binary_type: {}".format(binary_type))
 
         binary = name + "_bin" + suffix
         binary_type(
             name = binary,
             srcs = srcs,
-            **binary_kwargs
+            **(kwargs | binary_kwargs)
         )
 
         native.sh_test(
