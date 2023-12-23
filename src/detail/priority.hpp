@@ -1,7 +1,6 @@
 #pragma once
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 template <int N>
 struct priority : priority<N - 1>
@@ -10,5 +9,4 @@ template <>
 struct priority<0>
 {};
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail

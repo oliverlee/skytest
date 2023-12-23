@@ -1,6 +1,8 @@
 #pragma once
 
+#include "src/cfg.hpp"
 #include "src/detail/is_specialization_of.hpp"
+#include "src/detail/remove_cvref.hpp"
 #include "src/detail/type_name.hpp"
 #include "src/result.hpp"
 #include "src/rope.hpp"
@@ -26,7 +28,7 @@ template <class F, class = void>
 struct compile_time_result : runtime_only_result
 {};
 template <class F>
-struct compile_time_result<F, std::enable_if_t<bool{F{}()} or true>>
+struct compile_time_result<F, std::enable_if_t<bool(F{}()) or true>>
 {
   static constexpr auto value = std::optional<bool>{bool{F{}()}};
 };
@@ -93,7 +95,7 @@ public:
   }
 
   template <class Params>
-  constexpr friend auto operator*(test&& t, const Params& params)
+  constexpr friend auto operator*(const test& t, const Params& params)
   {
     static_assert(
         N == 1,

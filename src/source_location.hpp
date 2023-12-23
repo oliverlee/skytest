@@ -19,8 +19,16 @@ public:
     return sl;
   }
 
-  constexpr auto file_name() const noexcept { return file_; }
-  constexpr auto line() const noexcept { return line_; }
+  [[nodiscard]]
+  constexpr auto file_name() const noexcept
+  {
+    return file_;
+  }
+  [[nodiscard]]
+  constexpr auto line() const noexcept
+  {
+    return line_;
+  }
 };
 
 }  // namespace skytest

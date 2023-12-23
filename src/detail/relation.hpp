@@ -10,8 +10,7 @@
 #include <tuple>
 #include <utility>
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 struct and_
 {
@@ -102,5 +101,4 @@ struct relation
   }
 };
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail

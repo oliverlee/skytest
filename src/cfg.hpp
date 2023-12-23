@@ -11,6 +11,7 @@ struct override
 {};
 
 template <class = override>
-auto cfg = runner<default_printer>{std::cout};
+// NOLINTNEXTLINE(cppcoreguidelines-interfaces-global-init)
+const auto cfg = runner<default_printer>{std::cout};
 
 }  // namespace skytest

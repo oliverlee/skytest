@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/result.hpp"
+#include "src/utility.hpp"
 
 #include <cstdlib>
 #include <type_traits>
@@ -10,8 +11,8 @@ namespace skytest {
 template <class Printer>
 class runner
 {
-  Printer printer_;
-  summary summary_{};
+  mutable Printer printer_;
+  mutable summary summary_{};
 
 public:
   template <
@@ -25,11 +26,13 @@ public:
   ~runner()
   {
     printer_ << summary_;
-    std::exit(summary_.fail != 0);
+
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
+    std::exit(static_cast<int>(summary_.fail != 0));
   }
 
   template <class R, class M>
-  auto report(const result<R, M>& r) & -> void
+  auto report(const result<R, M>& r) const -> void
   {
     printer_ << r;
     ++(r ? summary_.pass : summary_.fail);

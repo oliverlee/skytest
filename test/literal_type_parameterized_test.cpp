@@ -1,6 +1,5 @@
 #include "skytest/skytest.hpp"
 
-#include <cassert>
 #include <cstddef>
 #include <ranges>
 #include <tuple>
