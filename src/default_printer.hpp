@@ -61,6 +61,17 @@ class default_printer
     return *this;
   }
 
+  template <class F>
+  static auto
+  display(std::ostream& os, const F& msg) -> decltype(msg(os), void())
+  {
+    msg(os);
+  }
+  static auto display(std::ostream& os, std::string_view msg) -> void
+  {
+    os << msg;
+  }
+
 public:
   default_printer(std::ostream& os) : os_{os} {}
 
@@ -122,7 +133,8 @@ public:
     if (not r) {
       p.os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
       p << r.relation;
-      r.msg(p.os_);
+      p.os_ << "\n";
+      display(p.os_, r.msg);
       p.os_ << "\n";
     }
 

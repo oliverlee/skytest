@@ -37,7 +37,9 @@ skytest_test(
     return_code = 1,
     stdout = [
         "hello, world!",
+        "hello, again!",
         "got: 1",
+        "1 test passed.*3 tests failed",
     ],
 )
 
