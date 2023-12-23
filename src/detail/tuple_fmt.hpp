@@ -5,8 +5,7 @@
 #include <tuple>
 #include <utility>
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 template <class... Ts>
 struct tuple_fmt
@@ -33,5 +32,4 @@ constexpr auto fmt(const std::tuple<Ts...>& tup)
   return tuple_fmt<Ts...>{tup};
 }
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail

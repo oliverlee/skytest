@@ -67,6 +67,9 @@ Checks: >
     # this library defines a DSL,
     -misc-unconventional-assign-operator,
 
+    # false positives,
+    -readability-simplify-boolean-expr,
+
 CheckOptions:
     - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
       value: true

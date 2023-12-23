@@ -2,8 +2,7 @@
 
 #include <type_traits>
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 template <class T, class = void>
 struct is_defined : std::false_type
@@ -14,5 +13,4 @@ struct is_defined<T, std::void_t<decltype(sizeof(T))>> : std::true_type
 template <class T>
 inline constexpr auto is_defined_v = is_defined<T>::value;
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail

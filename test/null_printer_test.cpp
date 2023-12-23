@@ -12,7 +12,8 @@ struct null_printer
 }  // namespace
 
 template <>
-auto ::skytest::cfg<::skytest::override> = ::skytest::runner<::null_printer>{};
+const auto ::skytest::cfg<::skytest::override> =
+    ::skytest::runner<::null_printer>{};
 
 auto main() -> int
 {

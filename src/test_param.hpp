@@ -232,6 +232,8 @@ private:
     auto s = std::array<char, N>{};
     auto i = std::size_t{};
     for (auto it = params_.begin(); it != params_.end(); ++it) {
+      // other options will alloc
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
       std::sprintf(s.data(), "%zu", i++);
       test{value_param_name(s.data())} = g[it];
     }

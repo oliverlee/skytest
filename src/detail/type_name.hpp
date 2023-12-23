@@ -2,8 +2,7 @@
 
 #include "src/detail/trim_substring.hpp"
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 template <class F>
 constexpr auto type_name_impl()
@@ -21,5 +20,4 @@ constexpr auto type_name_impl()
 template <class F>
 inline constexpr auto type_name = type_name_impl<F>();
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail

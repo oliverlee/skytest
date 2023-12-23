@@ -10,8 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace skytest {
-namespace detail {
+namespace skytest::detail {
 
 template <class F, const std::string_view& Name, class Format>
 struct predicate : F
@@ -42,5 +41,4 @@ struct predicate : F
   }
 };
 
-}  // namespace detail
-}  // namespace skytest
+}  // namespace skytest::detail
