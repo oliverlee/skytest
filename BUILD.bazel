@@ -17,10 +17,13 @@ cc_library(
     srcs = [
         "src/cfg.hpp",
         "src/default_printer.hpp",
+        "src/detail/is_defined.hpp",
         "src/detail/is_specialization_of.hpp",
         "src/detail/predicate.hpp",
+        "src/detail/priority.hpp",
         "src/detail/relation.hpp",
         "src/detail/remove_cvref.hpp",
+        "src/detail/trim_substring.hpp",
         "src/detail/tuple_fmt.hpp",
         "src/detail/type_name.hpp",
         "src/expect.hpp",

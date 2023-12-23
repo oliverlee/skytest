@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string_view>
+#include "src/detail/trim_substring.hpp"
 
 namespace skytest {
 namespace detail {
@@ -8,24 +8,18 @@ namespace detail {
 template <class F>
 constexpr auto type_name_impl()
 {
-  constexpr auto full = std::string_view{__PRETTY_FUNCTION__};
-
+  constexpr auto prefix =
 #ifdef __clang__
-  constexpr auto prefix = std::string_view{"F = "};
-  constexpr auto suffix = std::string_view{"]"};
+      "F = ";
 #else
-  constexpr auto prefix = std::string_view{"with F = "};
-  constexpr auto suffix = std::string_view{"]"};
+      "with F = ";
 #endif
 
-  const auto lower = full.find(prefix) + prefix.size();
-  const auto upper = full.find(suffix, lower);
-
-  return std::string_view{full.begin() + lower, upper - lower};
+  return trim_substring(__PRETTY_FUNCTION__, prefix, "]");
 }
 
 template <class F>
-static constexpr auto type_name = type_name_impl<F>();
+inline constexpr auto type_name = type_name_impl<F>();
 
 }  // namespace detail
 }  // namespace skytest

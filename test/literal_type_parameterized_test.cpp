@@ -1,6 +1,8 @@
 #include "skytest/skytest.hpp"
 
+#include <cassert>
 #include <cstddef>
+#include <ranges>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -33,6 +35,16 @@ template <>
 struct std::tuple_size<::tuple_like> : std::integral_constant<std::size_t, 3>
 {};
 
+template <int start, int step, int size>
+struct arithmetic_t
+{
+  static constexpr auto value =
+      std::views::iota(0, size) |
+      std::views::transform([](int i) { return start + i * step; });
+};
+template <auto start, auto step, std::size_t size>
+inline constexpr auto arithmetic = arithmetic_t<start, step, size>{};
+
 auto main() -> int
 {
   using namespace ::skytest::literals;
@@ -46,4 +58,10 @@ auto main() -> int
         using T = decltype(type_param);
         return expect(eq(T{1}, type_param));
       };
+
+  "literal constexpr range values"_test * param<std::array{1, 2, 3}> =  //
+      [](auto value) { return expect(eq(2, value)); };
+
+  "custom arithmetic range"_test * arithmetic<1, 3, 5> =  //
+      [](auto value) { return expect(eq(value % 2, 0)); };
 }

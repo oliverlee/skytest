@@ -177,6 +177,24 @@ skytest_test(
     ],
 )
 
+# GCC seems to have issues with a reference to a std::array
+skytest_test(
+    name = "value_parameterized_test",
+    srcs = ["value_parameterized_test.cpp"],
+    stdout = [
+        "vector values \\[0\\].*PASS",
+        "vector values \\[1\\].*PASS",
+        "vector values \\[2\\].*PASS",
+        "array values \\[0\\].*CONSTEXPR PASS",
+        "array values \\[1\\].*\\(CONSTEXPR \\)\\?PASS",
+        "array values \\[2\\].*\\(CONSTEXPR \\)\\?PASS",
+        "initializer_list values \\[0\\].*CONSTEXPR PASS",
+        "initializer_list values \\[1\\].*CONSTEXPR PASS",
+        "initializer_list values \\[2\\].*CONSTEXPR PASS",
+        "all tests passed.*(9 tests)",
+    ],
+)
+
 skytest_test(
     name = "literal_type_parameterized_test",
     srcs = ["literal_type_parameterized_test.cpp"],
@@ -184,11 +202,20 @@ skytest_test(
         20,
         23,
     ],
+    return_code = 1,
     stdout = [
         "literal constexpr custom tuple-like.*<int>.*CONSTEXPR PASS",
         "literal constexpr custom tuple-like.*<float>.*CONSTEXPR PASS",
         "literal constexpr custom tuple-like.*<double>.*CONSTEXPR PASS",
-        "all tests passed.*(3 tests)",
+        "literal constexpr range values \\[0\\].*CONSTEXPR FAIL",
+        "literal constexpr range values \\[1\\].*CONSTEXPR PASS",
+        "literal constexpr range values \\[2\\].*CONSTEXPR FAIL",
+        "custom arithmetic range \\[0\\].*CONSTEXPR FAIL",
+        "custom arithmetic range \\[1\\].*CONSTEXPR PASS",
+        "custom arithmetic range \\[2\\].*CONSTEXPR FAIL",
+        "custom arithmetic range \\[3\\].*CONSTEXPR PASS",
+        "custom arithmetic range \\[4\\].*CONSTEXPR FAIL",
+        "6 tests passed.*5 tests failed",
     ],
 )
 
