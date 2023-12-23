@@ -8,5 +8,6 @@
 #include "src/runner.hpp"
 #include "src/source_location.hpp"
 #include "src/test.hpp"
+#include "src/test_param.hpp"
 #include "src/utility.hpp"
 #include "src/version.hpp"

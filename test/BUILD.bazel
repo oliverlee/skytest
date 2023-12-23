@@ -159,12 +159,36 @@ skytest_test(
     srcs = ["type_parameterized_test.cpp"],
     return_code = 1,
     stdout = [
-        "typed.*<float>.*FAIL",
-        "typed.*<std::complex<double>>.*FAIL",
-        "typed.*<std::nullptr_t>.*FAIL",
-        "typed.*<.*type_identity<float>>.*CONSTEXPR PASS",
-        "typed.*<.*type_identity<std::complex<double> \\?>>.*CONSTEXPR PASS",
-        "typed.*<.*type_identity<std::nullptr_t>>.*CONSTEXPR PASS",
+        "typed.*<const float \\?&>.*FAIL",
+        "typed.*<const std::complex<double> \\?&>.*FAIL",
+        "typed.*<.*std::nullptr_t \\?&>.*FAIL",
+        "typed.*<.*type_identity<float>.*>.*CONSTEXPR PASS",
+        "typed.*<.*type_identity<std::complex<double> \\?>.*>.*CONSTEXPR PASS",
+        "typed.*<.*type_identity<std::nullptr_t>.*>.*CONSTEXPR PASS",
+        "pair types.*<const float \\?&>.*PASS",
+        "pair types.*<const double \\?&>.*PASS",
+        "custom tuple-like.*<int>.*PASS",
+        "custom tuple-like.*<float>.*PASS",
+        "custom tuple-like.*<double>.*PASS",
+        "constexpr custom tuple-like.*<int>.*CONSTEXPR PASS",
+        "constexpr custom tuple-like.*<float>.*CONSTEXPR PASS",
+        "constexpr custom tuple-like.*<double>.*CONSTEXPR PASS",
+        "11 tests passed.*3 tests failed",
+    ],
+)
+
+skytest_test(
+    name = "literal_type_parameterized_test",
+    srcs = ["literal_type_parameterized_test.cpp"],
+    cxxstd = [
+        20,
+        23,
+    ],
+    stdout = [
+        "literal constexpr custom tuple-like.*<int>.*CONSTEXPR PASS",
+        "literal constexpr custom tuple-like.*<float>.*CONSTEXPR PASS",
+        "literal constexpr custom tuple-like.*<double>.*CONSTEXPR PASS",
+        "all tests passed.*(3 tests)",
     ],
 )
 

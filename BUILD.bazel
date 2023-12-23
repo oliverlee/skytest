@@ -17,6 +17,7 @@ cc_library(
     srcs = [
         "src/cfg.hpp",
         "src/default_printer.hpp",
+        "src/detail/is_specialization_of.hpp",
         "src/detail/predicate.hpp",
         "src/detail/relation.hpp",
         "src/detail/remove_cvref.hpp",
@@ -29,6 +30,7 @@ cc_library(
         "src/runner.hpp",
         "src/source_location.hpp",
         "src/test.hpp",
+        "src/test_param.hpp",
         "src/utility.hpp",
         "src/version.hpp",
     ],
