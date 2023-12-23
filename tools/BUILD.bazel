@@ -1,6 +1,11 @@
 load("@bazel_clang_format//:defs.bzl", "clang_format_update")
 load("@bazel_clang_tidy//:defs.bzl", "clang_tidy_apply_fixes")
 load("@buildifier_prebuilt//:rules.bzl", "buildifier")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("//rules:incompatible.bzl", "incompatible_with_sanitizers")
+
+config_setting_group = selects.config_setting_group
 
 clang_format_update(
     name = "clang-format",
@@ -45,4 +50,61 @@ sh_binary(
     name = "verbose-clang-tidy",
     srcs = ["verbose-clang-tidy.sh"],
     data = ["@llvm_toolchain//:clang-tidy"],
+)
+
+bool_flag(
+    name = "incompatible_flag",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "incompatible",
+    flag_values = {
+        ":incompatible_flag": "true",
+    },
+)
+
+config_setting_group(
+    name = "incompatible_clang",
+    match_all = [
+        ":incompatible",
+        "@rules_cc//cc/compiler:clang",
+    ],
+)
+
+cc_library(
+    name = "maybe_incompatible",
+    target_compatible_with = select({
+        ":incompatible": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "maybe_incompatible_clang",
+    target_compatible_with = select({
+        ":incompatible_clang": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
+
+incompatible_with_sanitizers(
+    name = "incompatible_with_asan",
+    sanitizers = ["asan"],
+    visibility = ["//test:__pkg__"],
+    deps = ["//tools:maybe_incompatible"],
+)
+
+incompatible_with_sanitizers(
+    name = "incompatible_with_tsan",
+    sanitizers = ["tsan"],
+    visibility = ["//test:__pkg__"],
+    deps = ["//tools:maybe_incompatible"],
+)
+
+incompatible_with_sanitizers(
+    name = "incompatible_with_ubsan_clang",
+    sanitizers = ["ubsan"],
+    visibility = ["//test:__pkg__"],
+    deps = ["//tools:maybe_incompatible_clang"],
 )

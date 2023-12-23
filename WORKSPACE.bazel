@@ -22,6 +22,14 @@ COMMON_CXX_WARNINGS = [
     "-Wimplicit-fallthrough",
 ]
 
+# bazel_toolchain also loads rules_cc but an older version
+http_archive(
+    name = "rules_cc",
+    sha256 = "2037875b9a4456dce4a79d112a8ae885bbc4aad968e6587dca6e64f3a0900cdf",
+    strip_prefix = "rules_cc-0.0.9",
+    urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.9/rules_cc-0.0.9.tar.gz"],
+)
+
 BAZEL_BOOTLIN_COMMIT = "10638e74e907689abf9b7dc81aad05c588879079"
 
 http_archive(
@@ -94,11 +102,11 @@ register_toolchains(
     "@gcc_toolchain//:toolchain",
 )
 
-BAZEL_CLANG_FORMAT_COMMIT = "f4198b68887699a4d1862e44458e4969ad69fc8a"
+BAZEL_CLANG_FORMAT_COMMIT = "ad5f2572518053b36a2d999f7b824fb5a7819ab4"
 
 http_archive(
     name = "bazel_clang_format",
-    sha256 = "bd75df6dae8d290a716e1812c463ef4ab36869b5557d8a6dd6abb8315acfc6ac",
+    sha256 = "c31f0ea477dd0da84fc2c694a533797a9d2bf060f8cca8b5ea30402a47a2ea0a",
     strip_prefix = "bazel_clang_format-%s" % BAZEL_CLANG_FORMAT_COMMIT,
     url = "https://github.com/oliverlee/bazel_clang_format/archive/%s.tar.gz" % BAZEL_CLANG_FORMAT_COMMIT,
 )
@@ -132,10 +140,3 @@ bazel_skylib_workspace()
 load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains")
 
 buildifier_prebuilt_register_toolchains()
-
-http_archive(
-    name = "rules_cc",
-    sha256 = "2037875b9a4456dce4a79d112a8ae885bbc4aad968e6587dca6e64f3a0900cdf",
-    strip_prefix = "rules_cc-0.0.9",
-    urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.9/rules_cc-0.0.9.tar.gz"],
-)

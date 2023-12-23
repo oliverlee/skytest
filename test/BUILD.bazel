@@ -235,6 +235,11 @@ skytest_test(
         "exited: 1",
         "1 test passed.*3 tests failed",
     ],
+    deps = [
+        "//tools:incompatible_with_asan",
+        "//tools:incompatible_with_tsan",
+        "//tools:incompatible_with_ubsan_clang",
+    ],
 )
 
 cc_library(
@@ -246,6 +251,9 @@ skytest_test(
     name = "null_printer_test",
     srcs = ["null_printer_test.cpp"],
     malloc = ":no_malloc",
+    deps = [
+        "//tools:incompatible_with_ubsan_clang",
+    ],
 )
 
 skytest_test(
