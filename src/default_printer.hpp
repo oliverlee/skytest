@@ -129,7 +129,6 @@ class default_printer
       *this << r.relation;
       os_ << "\n";
       display(os_, r.msg);
-      os_ << "\n";
     }
 
     os_ << "\n";
