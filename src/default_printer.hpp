@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/detail/arg_fmt.hpp"
 #include "src/detail/priority.hpp"
 #include "src/result.hpp"
 #include "src/utility.hpp"
@@ -47,10 +48,10 @@ class default_printer
     };
 
     os() << "(";
-    (*this) << std::get<0>(r.args);
+    (*this) << detail::arg_fmt(std::get<0>(r.args));
 
     os() << " " << Relation::predicate_type::symbol << " ";
-    (*this) << std::get<1>(r.args);
+    (*this) << detail::arg_fmt(std::get<1>(r.args));
 
     os() << ")" << colors::none;
 

@@ -124,6 +124,17 @@ skytest_test(
 )
 
 skytest_test(
+    name = "arg_fmt_test",
+    srcs = ["arg_fmt_test.cpp"],
+    return_code = 1,
+    stdout = [
+        "empty(\\[1, 2, 3\\])",
+        "empty({4}{5})",
+        "wrapped{...} == wrapped{...}",
+    ],
+)
+
+skytest_test(
     name = "constexpr_test",
     srcs = ["constexpr_test.cpp"],
     return_code = 1,
