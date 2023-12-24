@@ -1,5 +1,7 @@
 #pragma once
 
+#include "src/cfg.hpp"
+
 #include <cstdlib>
 #include <cstring>
 #include <optional>
@@ -10,7 +12,8 @@
 
 namespace skytest {
 
-inline constexpr struct
+namespace detail {
+struct aborts_fn
 {
   struct return_type
   {
@@ -38,23 +41,40 @@ inline constexpr struct
     }
   };
 
-  template <class F>
+  struct do_flush
+  {
+    friend auto& operator<<(std::ostream& os, do_flush)
+    {
+      os.flush();
+      return os;
+    }
+  };
+
+  template <class F, class Override = override>
   constexpr auto operator()(F&& f) const -> return_type
   {
+    cfg<Override>.printer_ << do_flush{};
+
     const auto pid = ::fork();
     if (pid == -1) {
       return {};
     }
 
     if (pid == 0) {
+      cfg<Override>.silence();
+
       std::forward<F>(f)();
-      std::_Exit(EXIT_SUCCESS);
+
+      // NOLINTNEXTLINE(concurrency-mt-unsafe)
+      std::exit(EXIT_SUCCESS);
     }
 
     auto status = int{};
     ::wait(&status);
     return {status};
   }
-} aborts{};
+};
+}  // namespace detail
+inline constexpr auto aborts = detail::aborts_fn{};
 
 }  // namespace skytest
