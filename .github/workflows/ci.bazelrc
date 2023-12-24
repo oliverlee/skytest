@@ -9,3 +9,15 @@ build --remote_download_minimal
 
 test --test_output=errors
 test --test_verbose_timeout_warnings
+
+# at least some of these options are needed to address errors in CI, even
+# without use of remote execution
+#
+# https://bazel.build/configure/coverage#remote-execution
+# https://github.com/bazelbuild/bazel/issues/4685
+coverage --strategy=CoverageReport=local
+coverage --experimental_split_coverage_postprocessing
+coverage --experimental_fetch_all_coverage_outputs
+coverage --remote_download_outputs=all
+coverage --experimental_remote_download_regex=.*/(coverage.dat$|_coverage/_coverage_report.dat$)
+
