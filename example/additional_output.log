@@ -1,0 +1,8 @@
+test `string-view-ish`...[31m[CONSTEXPR FAIL][0m example/additional_output.cpp:11
+[31m[2m(1 == 2)[0m
+a message
+test `ostream invocable closure`...[31m[CONSTEXPR FAIL][0m example/additional_output.cpp:16
+[31m[2m(std::pair<int, int>{...} == std::pair<int, int>{...})[0m
+1, 2
+
+0 tests passed | [31m2 tests failed[0m

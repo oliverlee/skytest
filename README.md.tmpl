@@ -1,0 +1,117 @@
+# skytest
+
+A non-allocating[^1] C++17+ unit test framework.
+
+## overview
+
+A minimal unit test example
+
+
+```cpp:example/minimal_pass.cpp
+```
+
+when run, will print
+
+```sh:example/minimal_pass.log
+```
+
+A test that fails
+
+```cpp:example/minimal_fail.cpp
+```
+
+will print
+
+```sh:example/minimal_fail.log
+```
+
+When running tests, `skytest` will attempt to invoke test closures at
+compile-time. If able to, results will be classified `CONSTEXPR PASS` or
+`CONSTEXPR FAIL` instead of `PASS` or `FAIL`.
+
+<a name="examples"></a>
+<details open>
+  <summary>examples</summary>
+  
+  <details open><summary>&nbsp;&nbsp;&nbsp;&nbsp;binary comparisons</summary>
+  Binary comparison predicates `{eq,ne,lt,gt,le,gt}` display arguments on
+  failure.
+
+  ```cpp:example/binary_comparisons.cpp
+  ```
+
+  </details>
+
+  <details open><summary>&nbsp;&nbsp;&nbsp;&nbsp;logical operations</summary>
+  Logical operators can be used to compose predicates (including user defined predicates).
+
+  ```cpp:example/logical_operations.cpp
+  ```
+
+  </details>
+
+  <details open><summary>&nbsp;&nbsp;&nbsp;&nbsp;additional output on failure</summary>
+  Additional output can be displayed on test failure.
+
+  ```cpp:example/additional_output.cpp
+  ```
+  ```sh:example/additional_output.log
+  ```
+
+  NOTE: The message closure is not invoked within the test closure. Capturing
+  `x` and `y` by reference will result in dangling.
+  </details>
+  
+  <details open><summary>&nbsp;&nbsp;&nbsp;&nbsp;user defined predicates</summary>
+  Defining a predicate with `pred` captures and displays arguments on failure.
+
+  ```cpp:example/user_defined_predicates.cpp
+  ```
+  ```sh:example/user_defined_predicates.log
+  ```
+  
+  The description of user defined predicates can be customized
+
+  ```cpp:example/described_predicates.cpp
+  ```
+  ```sh:example/described_predicates.log
+  ```
+
+  C++20 enables a terser syntax.
+
+  ```cpp:example/described_predicates_20.cpp
+  ```
+  ```sh:example/described_predicates_20.log
+  ```
+
+  </details>
+  
+  <details open><summary>&nbsp;&nbsp;&nbsp;&nbsp;parameterized tests</summary>
+  Tests can be parameterized by type
+
+  ```cpp:example/type_parameterized.cpp
+  ```
+  
+  or by value
+
+  ```cpp:example/value_parameterized.cpp
+  ```
+
+  If parameters are defined as a static constant, `param_ref` may enable
+  compile-time tests.
+
+  ```cpp:example/param_ref_parameterized.cpp
+  ```
+
+  If parameters are defined as a literal-type[^2], C++20 allows use of `param`:
+
+  ```cpp:example/param_parameterized.cpp
+  ```
+
+  </details>
+  
+  
+</details>
+
+[^1]: The default printer uses `std::cout` and `skytest::aborts` calls `fork`.
+[^2]: https://en.cppreference.com/w/cpp/named_req/LiteralType
