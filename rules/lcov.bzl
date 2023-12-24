@@ -16,6 +16,7 @@ def lcov(
             # https://github.com/bazelbuild/bazel/issues/13919
             "--test_env=COVERAGE_GCOV_OPTIONS=-b",
         ],
+        lcov_tool = "lcov",
         lcov_opts = []):
     """
     Generate an lcov reports from the output of Bazel's coverage command.
@@ -29,11 +30,17 @@ def lcov(
         List of targets used to determine coverage.
       coverage_opts: string_list
         Options passed to Bazel's coverage command.
+      lcov_tool: string
+        lcov tool to use. See `@lcov//:bin/` for a complete list
       lcov_opts: string_list
-        Options passed to lcov to generate a report.
+        Options passed to the lcov tool to generate a report.
 
-    instrumented_targets and test_targets are specified as strings which are
-    passed to the underlying coverage command, and may include wildcards.
+    `instrumented_targets` and `test_targets` are specified as strings which
+    are passed to the underlying coverage command, and may include wildcards.
+
+    If `lcov_tool` is set to `genhtml`, the output directory is set to `$(bazel
+    info output_path)/lcov_html` and the target will attempt to open the html
+    page.
 
     Example:
 
@@ -41,10 +48,19 @@ def lcov(
         name = "lcov_list",
         instrumented_targets = ["//:skytest"],
         test_targets = ["//test/..."],
-        lcov_opts = ["--list", "--rc", "lcov_branch_coverage=1"],
+        lcov_opts = ["--rc lcov_branch_coverage=1", "--list"],
       )
 
       bazel run :lcov_list
+
+      lcov(
+        name = "lcov_html",
+        instrumented_targets = ["//:skytest"],
+        test_targets = ["//test/..."],
+        lcov_tool = "genhtml",
+      )
+
+      bazel run :lcov_html
     """
     instrumented = [
         "--instrumentation_filter={}".format(target)
@@ -56,15 +72,21 @@ def lcov(
         coverage_opts + instrumented + test_targets,
     )
 
-    lcov_command = " ".join(["\"${{lcov}}\""] + lcov_opts)
+    open_command = ""
+
+    if lcov_tool == "genhtml":
+        output_dir = "\"${{output_path}}/lcov_html\""
+        lcov_opts = ["--output {}".format(output_dir)] + lcov_opts
+        open_command = "xdg-open {}/index.html".format(output_dir)
+
+    lcov_command = " ".join(["\"${{lcov_tool}}\""] + lcov_opts)
 
     content = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
         "",
-        "lcov=\"$(pwd)/${{1}}\"",
+        "lcov_tool=\"$(pwd)/${{1}}\"",
         "",
-        "unset TEST_TMPDIR",
         "cd $BUILD_WORKSPACE_DIRECTORY",
         "output_path=\"$({bazel} info {bazel_common_opts} output_path)\"",
         "coverage_report=\"${{output_path}}/_coverage/_coverage_report.dat\"",
@@ -72,6 +94,7 @@ def lcov(
         coverage_command + " || true",
         "",
         lcov_command + " \"${{coverage_report}}\"",
+        open_command,
     ]
 
     content = [
@@ -94,6 +117,6 @@ def lcov(
     native.sh_binary(
         name = name,
         srcs = [name + ".sh"],
-        data = ["@lcov//:bin/lcov"],
-        args = ["$(rootpath @lcov//:bin/lcov)"],
+        data = ["@lcov//:bin/{}".format(lcov_tool)],
+        args = ["$(rootpath @lcov//:bin/{})".format(lcov_tool)],
     )
