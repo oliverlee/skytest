@@ -62,8 +62,8 @@ jobs:
     - run: |
         bazel \
           --bazelrc=.github/workflows/ci.bazelrc \
-          coverage \
-          //...
+          run \
+          //tools:lcov_list
 
     - uses: codecov/codecov-action@v3
       with:

@@ -140,3 +140,13 @@ bazel_skylib_workspace()
 load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains")
 
 buildifier_prebuilt_register_toolchains()
+
+http_archive(
+    name = "lcov",
+    build_file_content = """
+exports_files(glob(["**/*"]))
+""",
+    sha256 = "987031ad5528c8a746d4b52b380bc1bffe412de1f2b9c2ba5224995668e3240b",
+    strip_prefix = "lcov-1.16",
+    url = "https://github.com/linux-test-project/lcov/releases/download/v1.16/lcov-1.16.tar.gz",
+)
