@@ -1,0 +1,35 @@
+name: "ci environment setup"
+description: |
+  * set up color diagnostics for clang
+  * mount bazel cache
+  * set home bazelrc
+
+inputs:
+  bazel-cache-key: 
+    required: true
+  bazel-cache-path: 
+    required: false
+    default: "~/.cache/bazel"
+
+runs:
+  using: "composite"
+  steps:
+    - name: install libtinfo5
+      shell: bash
+      # clang tools load libtinfo5 for color diagnostics but `ubuntu-latest`
+      # runners already have `libtinfo.so.6` installed. We just create a
+      # symlink since it's faster than installing libtinfo5.
+      # https://github.com/circleci/circleci-images/issues/430#issuecomment-522602495
+      run: |
+        sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+
+    - name: mount bazel cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.bazel-cache-path }}
+        key: ${{ inputs.bazel-cache-key }}
+
+    - name: setup ci bazelrc
+      shell: bash
+      run: |
+        cp .github/workflows/ci.bazelrc ~/.bazelrc

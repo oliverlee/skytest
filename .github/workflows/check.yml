@@ -18,23 +18,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: mount bazel cache
-      uses: actions/cache@v3
+    - uses: ./.github/actions/ci-env-setup
       with:
-        path: "~/.cache/bazel"
-        key: bazel-test-${{ matrix.toolchain }}-${{ matrix.feature }}
-
-    - name: install libtinfo5
-      # clang tools load libtinfo5 for color diagnostics but `ubuntu-latest`
-      # runners already have `libtinfo.so.6` installed. We just create a
-      # symlink since it's faster than installing libtinfo5.
-      # https://github.com/circleci/circleci-images/issues/430#issuecomment-522602495
-      run: |
-        sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+        bazel-cache-key: bazel-test-${{ matrix.toolchain }}-${{ matrix.feature }}
 
     - run: |
         bazel \
-          --bazelrc=.github/workflows/ci.bazelrc \
           test \
           --config=${{ matrix.toolchain }} \
           --features=${{ matrix.feature }} \
@@ -45,23 +34,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: mount bazel cache
-      uses: actions/cache@v3
+    - uses: ./.github/actions/ci-env-setup
       with:
-        path: "~/.cache/bazel"
-        key: bazel-coverage
-
-    - name: install libtinfo5
-      # clang tools load libtinfo5 for color diagnostics but `ubuntu-latest`
-      # runners already have `libtinfo.so.6` installed. We just create a
-      # symlink since it's faster than installing libtinfo5.
-      # https://github.com/circleci/circleci-images/issues/430#issuecomment-522602495
-      run: |
-        sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+        bazel-cache-key: bazel-coverage
 
     - run: |
         bazel \
-          --bazelrc=.github/workflows/ci.bazelrc \
           run \
           //tools:lcov_list
 
@@ -87,23 +65,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: mount bazel cache
-      uses: actions/cache@v3
+    - uses: ./.github/actions/ci-env-setup
       with:
-        path: "~/.cache/bazel"
-        key: bazel-build-${{ matrix.flag }}
-
-    - name: install libtinfo5
-      # clang tools load libtinfo5 for color diagnostics but `ubuntu-latest`
-      # runners already have `libtinfo.so.6` installed. We just create a
-      # symlink since it's faster than installing libtinfo5.
-      # https://github.com/circleci/circleci-images/issues/430#issuecomment-522602495
-      run: |
-        sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+        bazel-cache-key: bazel-build-${{ matrix.flag }}
 
     - run: |
         bazel \
-          --bazelrc=.github/workflows/ci.bazelrc \
           build \
           ${{ matrix.flag }} \
           //...
@@ -113,14 +80,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: mount bazel cache
-      uses: actions/cache@v3
+    - uses: ./.github/actions/ci-env-setup
       with:
-        path: "~/.cache/bazel"
-        key: bazel-buildifier
+        bazel-cache-key: bazel-buildifier
 
     - run: |
         bazel \
-          --bazelrc=.github/workflows/ci.bazelrc \
           run \
           //tools:buildifier.check
