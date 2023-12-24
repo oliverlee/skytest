@@ -7,12 +7,20 @@
 #include <type_traits>
 
 namespace skytest {
+namespace detail {
+struct aborts_fn;
+}
 
 template <class Printer>
 class runner
 {
   mutable Printer printer_;
   mutable summary summary_{};
+  mutable bool silent_ = false;
+
+  friend struct ::skytest::detail::aborts_fn;
+
+  auto silence() const { silent_ = true; }
 
 public:
   template <
@@ -25,6 +33,10 @@ public:
 
   ~runner()
   {
+    if (silent_) {
+      return;
+    }
+
     printer_ << summary_;
 
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
