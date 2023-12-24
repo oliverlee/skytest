@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/detail/tuple_fmt.hpp"
+#include "src/detail/arg_fmt.hpp"
 #include "src/detail/type_name.hpp"
 #include "src/utility.hpp"
 
@@ -53,22 +53,22 @@ struct relation
       os << predicate_type::name << "{}";
     }
 
-    os << "(" << fmt(r.args) << ")";
+    os << "(" << arg_fmt(r.args) << ")";
     return os;
   }
   static auto& print(notation::prefix, std::ostream& os, const relation& r)
   {
     static_assert(sizeof...(Ts) != 0);
 
-    os << "(" << predicate_type::symbol << " " << fmt(r.args) << ")";
+    os << "(" << predicate_type::symbol << " " << arg_fmt(r.args) << ")";
     return os;
   }
   static auto& print(notation::infix, std::ostream& os, const relation& r)
   {
     static_assert(sizeof...(Ts) == 2);
 
-    os << "(" << std::get<0>(r.args) << " " << predicate_type::symbol << " "
-       << std::get<1>(r.args) << ")";
+    os << "(" << arg_fmt(std::get<0>(r.args)) << " " << predicate_type::symbol
+       << " " << arg_fmt(std::get<1>(r.args)) << ")";
     return os;
   }
 

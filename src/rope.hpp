@@ -49,6 +49,7 @@ struct rope
   friend auto& operator<<(std::ostream& os, const rope& r)
   {
     os << rope_ref{r};
+    return os;
   }
 };
 

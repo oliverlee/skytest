@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/detail/is_defined.hpp"
+#include "src/detail/is_range.hpp"
 #include "src/detail/priority.hpp"
 #include "src/detail/remove_cvref.hpp"
 #include "src/detail/trim_substring.hpp"
@@ -31,21 +32,6 @@ namespace detail {
 
 template <std::size_t I>
 using constant = std::integral_constant<std::size_t, I>;
-
-template <class T, class = void>
-struct is_range : std::false_type
-{};
-template <class T>
-struct is_range<
-    T,
-    std::enable_if_t<
-        decltype(std::declval<T&>().begin(),
-                 std::declval<T&>().end(),
-                 std::true_type{})::value>> : std::true_type
-{};
-
-template <class T>
-inline constexpr auto is_range_v = is_range<T>::value;
 
 template <class T, class = void>
 struct has_static_value : std::false_type
