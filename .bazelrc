@@ -25,7 +25,4 @@ build:verbose-clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=//tools:ver
 build:clang-tidy --config=clang-tidy-base
 build:clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=@llvm_toolchain//:clang-tidy
 
-# Clang will fail for tests that replace malloc and has worse coverage results than GCC
-coverage --extra_toolchains=//toolchain:gcc
-
 try-import %workspace%/user.bazelrc

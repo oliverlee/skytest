@@ -110,27 +110,47 @@ incompatible_with_sanitizers(
     deps = ["//tools:maybe_incompatible_clang"],
 )
 
+lcov_attrs = {
+    "instrumented_targets": ["//:skytest"],
+    "test_targets": ["//test/..."],
+    "coverage_opts": [
+        "--combined_report=lcov",
+        "--experimental_generate_llvm_lcov",
+        "--test_output=errors",
+        "--extra_toolchains=//toolchain:gcc",
+        # https://github.com/bazelbuild/bazel/issues/13919
+        # https://github.com/bazelbuild/bazel/blob/master/tools/test/collect_cc_coverage.sh
+        "--test_env=COVERAGE_GCOV_OPTIONS=-b",
+        # https://gcovr.com/en/stable/faq.html#why-does-c-code-have-so-many-uncovered-branches
+        # https://stackoverflow.com/questions/42003783/lcov-gcov-branch-coverage-with-c-producing-branches-all-over-the-place
+        "--cxxopt=-fno-exceptions",
+    ],
+}
+
 lcov(
     name = "lcov_list",
-    instrumented_targets = ["//:skytest"],
+    coverage_opts = lcov_attrs["coverage_opts"],
+    instrumented_targets = lcov_attrs["instrumented_targets"],
     lcov_opts = [
         "--rc lcov_branch_coverage=1",
         "--list",
     ],
-    test_targets = ["//test/..."],
+    test_targets = lcov_attrs["test_targets"],
 )
 
 lcov(
     name = "lcov_html",
-    instrumented_targets = ["//:skytest"],
+    coverage_opts = lcov_attrs["coverage_opts"],
+    instrumented_targets = lcov_attrs["instrumented_targets"],
     lcov_opts = [
         "--show-details",
         "--keep-descriptions",
         "--branch-coverage",
         "--highlight",
+        "--demangle-cpp",
         "--missed",
         "--dark-mode",
     ],
     lcov_tool = "genhtml",
-    test_targets = ["//test/..."],
+    test_targets = lcov_attrs["test_targets"],
 )

@@ -13,8 +13,6 @@ def lcov(
             "--combined_report=lcov",
             "--experimental_generate_llvm_lcov",
             "--test_output=errors",
-            # https://github.com/bazelbuild/bazel/issues/13919
-            "--test_env=COVERAGE_GCOV_OPTIONS=-b",
         ],
         lcov_tool = "lcov",
         lcov_opts = []):
