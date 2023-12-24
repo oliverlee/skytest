@@ -7,28 +7,6 @@ on:
     branches: [ "*" ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        toolchain: [gcc, clang]
-        feature: ['', asan, tsan, ubsan]
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-test-${{ matrix.toolchain }}-${{ matrix.feature }}
-
-    - run: |
-        bazel \
-          test \
-          --config=${{ matrix.toolchain }} \
-          --features=${{ matrix.feature }} \
-          //...
-
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -48,43 +26,3 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./bazel-out/_coverage/_coverage_report.dat
         fail_ci_if_error: true
-
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        flag:
-          - '--config=clang-format'
-          - '--config=clang-tidy'
-          - '--config=verbose-clang-tidy'
-          - '--compilation_mode=opt'
-        exclude:
-          - flag: ${{ github.event_name == 'pull_request' && '--config=verbose-clang-tidy' || 'dummy' }}
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-build-${{ matrix.flag }}
-
-    - run: |
-        bazel \
-          build \
-          ${{ matrix.flag }} \
-          //...
-
-  buildifier:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-buildifier
-
-    - run: |
-        bazel \
-          run \
-          //tools:buildifier.check

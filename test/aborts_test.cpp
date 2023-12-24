@@ -13,8 +13,8 @@ auto main() -> int
 
   "does not abort"_test = [] { return expect(aborts([] {})); };
 
-  "terminates due to sigsegv"_test = [] {
-    return expect(aborts([] { std::raise(SIGSEGV); }));
+  "terminates due to sigint"_test = [] {
+    return expect(aborts([] { std::raise(SIGINT); }));
   };
 
   "exits without abort"_test = [] {

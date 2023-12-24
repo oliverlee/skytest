@@ -240,16 +240,11 @@ skytest_test(
         "aborts.*PASS",
         "does not abort.*FAIL",
         "exited: 0",
-        "terminates due to sigsegv.*FAIL",
-        "signal: SIGSEGV",
+        "terminates due to sigint.*FAIL",
+        "signal: SIGINT",
         "exits without abort.*FAIL",
         "exited: 1",
         "1 test passed.*3 tests failed",
-    ],
-    deps = [
-        "//tools:incompatible_with_asan",
-        "//tools:incompatible_with_tsan",
-        "//tools:incompatible_with_ubsan_clang",
     ],
 )
 

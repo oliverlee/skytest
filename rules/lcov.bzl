@@ -15,6 +15,12 @@ def lcov(
             "--test_output=errors",
             # https://github.com/bazelbuild/bazel/issues/13919
             "--test_env=COVERAGE_GCOV_OPTIONS=-b",
+            # https://bazel.build/configure/coverage#remote-execution
+            "--strategy=CoverageReport=local",
+            "--experimental_split_coverage_postprocessing",
+            "--experimental_fetch_all_coverage_outputs",
+            "--remote_download_outputs=all",
+            "--experimental_remote_download_regex='.*/((testlogs/.*/_coverage/.*)|coverage.dat$|_coverage/_coverage_report.dat$)'",
         ],
         lcov_tool = "lcov",
         lcov_opts = []):
