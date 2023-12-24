@@ -100,7 +100,7 @@ def lcov(
     content = [
         line.format(
             bazel = BAZEL_BIN,
-            bazel_common_opts = "--color=yes --curses=yes",
+            bazel_common_opts = "",
         )
         for line in content
     ]
