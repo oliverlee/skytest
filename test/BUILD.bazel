@@ -248,6 +248,19 @@ skytest_test(
     ],
 )
 
+skytest_test(
+    name = "aborts_with_failed_fork_test",
+    srcs = [
+        "aborts_with_failed_fork_test.cpp",
+        "failing_fork.cpp",
+    ],
+    return_code = 1,
+    stdout = [
+        "unable to fork process",
+        "0 tests passed.*1 test failed",
+    ],
+)
+
 cc_library(
     name = "no_malloc",
     srcs = ["no_malloc.cpp"],
