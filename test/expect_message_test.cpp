@@ -1,5 +1,7 @@
 #include "skytest/skytest.hpp"
 
+#include <exception>
+
 auto main() -> int
 {
   using namespace ::skytest::literals;
@@ -18,8 +20,6 @@ auto main() -> int
   };
 
   "not invoked on success"_test = [] {
-    return expect(true, [](auto&) {
-      throw std::runtime_error{"should not be invoked"};
-    });
+    return expect(true, [](auto&) { std::terminate(); });
   };
 }
