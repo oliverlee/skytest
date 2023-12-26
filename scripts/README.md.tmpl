@@ -1,0 +1,28 @@
+# skytest
+
+A non-allocating[^1] C++17+ unit test framework.
+
+## overview
+
+A minimal unit test example
+
+
+```cpp:example/minimal_pass.cpp
+```
+
+when run, will print
+
+```console:example/minimal_pass.log
+```
+
+A test that fails
+
+```cpp:example/minimal_fail.cpp
+```
+
+will print
+
+```console:example/minimal_fail.log
+```
+
+[^1]: The default printer uses `std::cout` and `skytest::aborts` calls `fork`.

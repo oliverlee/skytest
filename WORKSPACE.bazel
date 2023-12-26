@@ -150,3 +150,57 @@ exports_files(glob(["**/*"]))
     strip_prefix = "lcov-1.16",
     url = "https://github.com/linux-test-project/lcov/releases/download/v1.16/lcov-1.16.tar.gz",
 )
+
+http_archive(
+    name = "rules_python",
+    sha256 = "e85ae30de33625a63eca7fc40a94fea845e641888e52f32b6beea91e8b1b2793",
+    strip_prefix = "rules_python-0.27.1",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.27.1/rules_python-0.27.1.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
+
+py_repositories()
+
+python_register_toolchains(
+    name = "python3_11",
+    python_version = "3.11",
+)
+
+load("@python3_11//:defs.bzl", "interpreter")
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "pip",
+    python_interpreter_target = interpreter,
+    requirements_lock = "//tools:requirements.lock",
+)
+
+load("@pip//:requirements.bzl", "install_deps")
+
+install_deps()
+
+MARKDOWN_EMBED_CODE_COMMIT = "8b81fe2e5585c5e1d14772d8e712ecb7a69c74c8"
+
+http_archive(
+    name = "markdown-embed-code",
+    build_file_content = """
+load("@rules_python//python:defs.bzl", "py_library")
+load("@pip//:requirements.bzl", "requirement")
+
+py_library(
+    name = "markdown-embed-code",
+    srcs = ["markdown_embed_code/__init__.py"],
+    imports = ["."],
+    deps = [requirement("marko")],
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "a7ebe1beb55e24e0f6a7700f287da561b459055fc1c70729291c14ae8118fd1d",
+    strip_prefix = "markdown-embed-code-{commit}".format(
+        commit = MARKDOWN_EMBED_CODE_COMMIT,
+    ),
+    url = "https://github.com/tokusumi/markdown-embed-code/archive/{commit}.tar.gz".format(
+        commit = MARKDOWN_EMBED_CODE_COMMIT,
+    ),
+)

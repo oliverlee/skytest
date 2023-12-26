@@ -5,6 +5,7 @@ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("//rules:incompatible.bzl", "incompatible_with_sanitizers")
 load("//rules:lcov.bzl", "lcov")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 config_setting_group = selects.config_setting_group
 
@@ -153,4 +154,10 @@ lcov(
     ],
     lcov_tool = "genhtml",
     test_targets = lcov_attrs["test_targets"],
+)
+
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements.lock",
 )

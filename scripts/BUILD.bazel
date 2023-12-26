@@ -1,0 +1,53 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@local_config_info//:defs.bzl", "BAZEL_WORKSPACE_ROOT")
+
+py_binary(
+    name = "markdown-update",
+    srcs = ["markdown-update.py"],
+    visibility = ["//visibility:private"],
+    deps = ["@markdown-embed-code"],
+)
+
+genrule(
+    name = "gen_readme",
+    srcs = ["README.md.tmpl"],
+    outs = ["README.md.generated"],
+    cmd = """
+export BUILD_WORKSPACE_DIRECTORY={workspace_dir}
+$(execpath :markdown-update) $(rootpath :README.md.tmpl)> $@
+""".format(
+        workspace_dir = BAZEL_WORKSPACE_ROOT,
+    ),
+    tags = ["manual"],
+    tools = [":markdown-update"],
+    visibility = ["//visibility:private"],
+)
+
+genrule(
+    name = "readme.update_sh",
+    srcs = ["README.md.tmpl"],
+    outs = ["readme.update.sh"],
+    cmd = """
+set -euo pipefail
+echo "set -euo pipefail" > $@
+echo "" >> $@
+echo "cd \\$$BUILD_WORKSPACE_DIRECTORY" >> $@
+echo "$(execpath :markdown-update) $(rootpath :README.md.tmpl) > README.md" >> $@
+""",
+    tags = ["manual"],
+    tools = [":markdown-update"],
+    visibility = ["//visibility:private"],
+)
+
+sh_binary(
+    name = "readme.update",
+    srcs = [":readme.update.sh"],
+)
+
+diff_test(
+    name = "readme.check",
+    failure_message = "To update, run:\n\nbazel run //scripts:readme.update",
+    file1 = "//:README.md",
+    file2 = "README.md.generated",
+)
