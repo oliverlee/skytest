@@ -1,4 +1,4 @@
-test `empty array`...[31m[CONSTEXPR FAIL][0m example/described_predicates.cpp:24
-[31m[2mempty([1, 2, 3])[0m
+test `empty array`...[CONSTEXPR FAIL] example/described_predicates.cpp:24
+empty([1, 2, 3])
 
-0 tests passed | [31m1 test failed[0m
+0 tests passed | 1 test failed
