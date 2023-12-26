@@ -1,0 +1,4 @@
+test `falsy`...[31m[FAIL][0m example/minimal_fail.cpp:9
+[31m[2m(0 == 1)[0m
+
+0 tests passed | [31m1 test failed[0m
