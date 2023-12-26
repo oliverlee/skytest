@@ -1,0 +1,106 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("//rules:binary_log.bzl", "synchronized_binary_log")
+
+cc_binary(
+    name = "minimal_pass",
+    srcs = ["minimal_pass.cpp"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "minimal_pass_log",
+    src = ":minimal_pass",
+)
+
+cc_binary(
+    name = "minimal_fail",
+    srcs = ["minimal_fail.cpp"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "minimal_fail_log",
+    src = ":minimal_fail",
+)
+
+cc_test(
+    name = "binary_comparisons",
+    srcs = ["binary_comparisons.cpp"],
+    deps = ["//:skytest"],
+)
+
+cc_test(
+    name = "logical_operations",
+    srcs = ["logical_operations.cpp"],
+    deps = ["//:skytest"],
+)
+
+cc_binary(
+    name = "additional_output",
+    srcs = ["additional_output.cpp"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "additional_output_log",
+    src = ":additional_output",
+)
+
+cc_binary(
+    name = "user_defined_predicates",
+    srcs = ["user_defined_predicates.cpp"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "user_defined_predicates_log",
+    src = ":user_defined_predicates",
+)
+
+cc_binary(
+    name = "described_predicates_20",
+    srcs = ["described_predicates_20.cpp"],
+    copts = ["-std=c++20"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "described_predicates_20_log",
+    src = ":described_predicates_20",
+)
+
+cc_binary(
+    name = "described_predicates",
+    srcs = ["described_predicates.cpp"],
+    deps = ["//:skytest"],
+)
+
+synchronized_binary_log(
+    name = "described_predicates_log",
+    src = ":described_predicates",
+)
+
+cc_test(
+    name = "type_parameterized",
+    srcs = ["type_parameterized.cpp"],
+    deps = ["//:skytest"],
+)
+
+cc_test(
+    name = "value_parameterized",
+    srcs = ["value_parameterized.cpp"],
+    deps = ["//:skytest"],
+)
+
+cc_test(
+    name = "param_ref_parameterized",
+    srcs = ["param_ref_parameterized.cpp"],
+    deps = ["//:skytest"],
+)
+
+cc_test(
+    name = "param_parameterized",
+    srcs = ["param_parameterized.cpp"],
+    copts = ["-std=c++20"],
+    deps = ["//:skytest"],
+)

@@ -1,0 +1,4 @@
+test `empty array`...[31m[CONSTEXPR FAIL][0m example/user_defined_predicates.cpp:16
+[31m[2m(lambda at example/user_defined_predicates.cpp:12:38){}([1, 2, 3])[0m
+
+0 tests passed | [31m1 test failed[0m
