@@ -363,5 +363,32 @@ auto main() -> int
 </details>
 
 
+#### aborts
+<details><summary></summary>
+
+
+Check that abort is called (e.g. in a function precondition).
+
+```cpp:example/aborts.cpp
+#include "skytest/skytest.hpp"
+
+#include <cassert>
+
+auto main() -> int
+{
+  using namespace ::skytest::literals;
+  using ::skytest::aborts;
+  using ::skytest::expect;
+
+  static const auto not_zero = [](int value) { assert(value != 0); };
+
+  "aborts"_test = [] { return expect(aborts([] { not_zero(0); })); };
+}
+
+```
+
+</details>
+
+
 [^1]: The default printer uses `std::cout` and `skytest::aborts` calls `fork`.
 [^2]: https://en.cppreference.com/w/cpp/named_req/LiteralType
