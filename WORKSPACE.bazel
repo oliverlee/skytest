@@ -30,13 +30,17 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.9/rules_cc-0.0.9.tar.gz"],
 )
 
-BAZEL_BOOTLIN_COMMIT = "10638e74e907689abf9b7dc81aad05c588879079"
+BAZEL_BOOTLIN_COMMIT = "d15e4b4c3a984668d1d6bd5f3ca032efecae5cb1"
 
 http_archive(
     name = "bazel_bootlin",
-    sha256 = "47bbb94a6277ff1ab579b23509ed6c076445b9d99195b4df0aba069298ae3f1c",
-    strip_prefix = "bazel_bootlin-%s" % BAZEL_BOOTLIN_COMMIT,
-    url = "https://github.com/oliverlee/bazel_bootlin/archive/%s.tar.gz" % BAZEL_BOOTLIN_COMMIT,
+    integrity = "sha256-kBlWjcV2AXGblkqCNxg1/bs2c6YLrLHqLgSbwsAcCl8=",
+    strip_prefix = "bazel_bootlin-{commit}".format(
+        commit = BAZEL_BOOTLIN_COMMIT,
+    ),
+    url = "https://github.com/oliverlee/bazel_bootlin/archive/{commit}.tar.gz".format(
+        commit = BAZEL_BOOTLIN_COMMIT,
+    ),
 )
 
 load("@bazel_bootlin//:defs.bzl", "bootlin_toolchain")
@@ -64,8 +68,12 @@ BAZEL_TOOLCHAIN_COMMIT = "ade23e0e37c5308162c012a4f4224459c1c4fa22"
 http_archive(
     name = "bazel_toolchain",
     sha256 = "968e507ce913b93971aeb77b4b0a96f7b59b1f51cbaae57aefef4c573776ed56",
-    strip_prefix = "bazel-toolchain-%s" % BAZEL_TOOLCHAIN_COMMIT,
-    url = "https://github.com/grailbio/bazel-toolchain/archive/%s.tar.gz" % BAZEL_TOOLCHAIN_COMMIT,
+    strip_prefix = "bazel-toolchain-{commit}".format(
+        commit = BAZEL_TOOLCHAIN_COMMIT,
+    ),
+    url = "https://github.com/grailbio/bazel-toolchain/archive/{commit}.tar.gz".format(
+        commit = BAZEL_TOOLCHAIN_COMMIT,
+    ),
 )
 
 load("//tools:llvm_toolchain_dependencies.bzl", "llvm_toolchain_dependencies")
@@ -107,7 +115,9 @@ BAZEL_CLANG_FORMAT_COMMIT = "ad5f2572518053b36a2d999f7b824fb5a7819ab4"
 http_archive(
     name = "bazel_clang_format",
     sha256 = "c31f0ea477dd0da84fc2c694a533797a9d2bf060f8cca8b5ea30402a47a2ea0a",
-    strip_prefix = "bazel_clang_format-%s" % BAZEL_CLANG_FORMAT_COMMIT,
+    strip_prefix = "bazel_clang_format-{commit}".format(
+        commit = BAZEL_CLANG_FORMAT_COMMIT,
+    ),
     url = "https://github.com/oliverlee/bazel_clang_format/archive/%s.tar.gz" % BAZEL_CLANG_FORMAT_COMMIT,
 )
 
@@ -116,8 +126,12 @@ BAZEL_CLANG_TIDY_COMMIT = "aae87699cca19d8f6e84538576ab47587043d1d2"
 http_archive(
     name = "bazel_clang_tidy",
     sha256 = "ee7d89375b5c6554b40ea1b1132a8cf7e3e269f7c2f6b2f595e4c7181d44b736",
-    strip_prefix = "bazel_clang_tidy-%s" % BAZEL_CLANG_TIDY_COMMIT,
-    url = "https://github.com/oliverlee/bazel_clang_tidy/archive/%s.tar.gz" % BAZEL_CLANG_TIDY_COMMIT,
+    strip_prefix = "bazel_clang_tidy-{commit}".format(
+        commit = BAZEL_CLANG_TIDY_COMMIT,
+    ),
+    url = "https://github.com/oliverlee/bazel_clang_tidy/archive/{commit}.tar.gz".format(
+        commit = BAZEL_CLANG_TIDY_COMMIT,
+    ),
 )
 
 http_archive(
