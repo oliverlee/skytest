@@ -112,6 +112,13 @@ cc_test(
     deps = [":skytest_wrapper"],
 )
 
+cc_binary(
+    name = "aborts",
+    srcs = ["aborts.cpp"],
+    features = ["-opt"],
+    deps = [":skytest_wrapper"],
+)
+
 update_targets = [
     ":minimal_pass_log.update.sh",
     ":minimal_fail_log.update.sh",
