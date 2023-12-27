@@ -25,4 +25,97 @@ will print
 ```console:example/minimal_fail.log
 ```
 
+When running tests, `skytest` will attempt to invoke test closures at
+compile-time. If able to, results will be classified `CONSTEXPR PASS` or
+`CONSTEXPR FAIL` instead of `PASS` or `FAIL`.
+
+## examples
+
+#### binary comparisons
+<details><summary></summary>
+
+Binary comparison predicates display arguments on failure.
+
+```cpp:example/binary_comparisons.cpp
+```
+
+</details>
+
+#### logical operators
+<details><summary></summary>
+
+Logical operators can be used to compose predicates - including user defined predicates.
+
+```cpp:example/logical_operations.cpp
+```
+
+</details>
+
+#### additional output on failure
+<details><summary></summary>
+
+Additional output can be displayed on test failure.
+
+```cpp:example/additional_output.cpp
+```
+```console:example/additional_output.log
+```
+
+NOTE: The message closure is not invoked within the test closure. Capturing
+`x` and `y` by reference will result in dangling.
+</details>
+
+#### user defined predicates
+<details><summary></summary>
+
+Defining a predicate with `pred` captures and displays arguments on failure.
+
+```cpp:example/user_defined_predicates.cpp
+```
+```console:example/user_defined_predicates.log
+```
+
+The description of user defined predicates can be customized
+
+```cpp:example/described_predicates.cpp
+```
+```console:example/described_predicates.log
+```
+
+C++20 enables a terser syntax.
+
+```cpp:example/described_predicates_20.cpp
+```
+```console:example/described_predicates_20.log
+```
+
+</details>
+
+#### parameterized tests
+<details><summary></summary>
+
+Tests can be parameterized by type
+
+```cpp:example/type_parameterized.cpp
+```
+
+or by value
+
+```cpp:example/value_parameterized.cpp
+```
+
+If parameters are defined as a static constant, `param_ref` may enable
+compile-time tests.
+
+```cpp:example/param_ref_parameterized.cpp
+```
+
+If parameters are defined as a literal-type[^2], C++20 allows use of `param`:
+
+```cpp:example/param_parameterized.cpp
+```
+
+</details>
+
 [^1]: The default printer uses `std::cout` and `skytest::aborts` calls `fork`.
+[^2]: https://en.cppreference.com/w/cpp/named_req/LiteralType
