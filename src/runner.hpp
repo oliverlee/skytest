@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/default_printer.hpp"
 #include "src/result.hpp"
 #include "src/utility.hpp"
 
@@ -11,7 +12,7 @@ namespace detail {
 struct aborts_fn;
 }
 
-template <class Printer>
+template <class Printer = default_printer>
 class runner
 {
   mutable Printer printer_;
@@ -30,6 +31,12 @@ public:
   {}
 
   explicit runner(Printer p) : printer_{p} {}
+
+  template <
+      class... Args,
+      class = std::enable_if_t<std::is_constructible_v<Printer, Args...>>>
+  runner(Args&&... args) : printer_{std::forward<Args>(args)...}
+  {}
 
   ~runner()
   {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "src/default_printer.hpp"
 #include "src/runner.hpp"
 
 #include <iostream>
@@ -12,6 +11,6 @@ struct override
 
 template <class = override>
 // NOLINTNEXTLINE(cppcoreguidelines-interfaces-global-init)
-const auto cfg = runner<default_printer>{std::cout};
+const auto cfg = runner<>{std::cout};
 
 }  // namespace skytest

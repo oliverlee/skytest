@@ -3,6 +3,7 @@ Rule for generating and testing log files for a binary's output
 """
 
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@local_config_info//:defs.bzl", "BAZEL_WORKSPACE_ROOT")
 
 def binary_log(
         name,
@@ -72,19 +73,15 @@ def synchronized_binary_log(
 set -euo pipefail
 echo "set -euo pipefail" > $@
 echo "" >> $@
-echo "cd \\$${{BUILD_WORKSPACE_DIRECTORY}}" >> $@
+echo "cd {workspace_dir}" >> $@
 echo "$(execpath {src}) > $(rootpath {log}) || true" >> $@
 """.format(
             src = src,
             log = log,
+            workspace_dir = BAZEL_WORKSPACE_ROOT,
         ),
         tags = ["manual"],
         visibility = ["//visibility:private"],
-    )
-
-    native.sh_binary(
-        name = name + ".update",
-        srcs = [name + ".update.sh"],
     )
 
     diff_test(
@@ -94,4 +91,9 @@ echo "$(execpath {src}) > $(rootpath {log}) || true" >> $@
         failure_message = "To update, run:\n\nbazel run {}.update".format(
             str(label).replace("@//", "//"),
         ),
+    )
+
+    native.sh_binary(
+        name = name + ".update",
+        srcs = [name + ".update.sh"],
     )

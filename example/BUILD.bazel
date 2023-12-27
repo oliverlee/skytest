@@ -1,10 +1,17 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//rules:binary_log.bzl", "synchronized_binary_log")
+
+cc_library(
+    name = "skytest_wrapper",
+    hdrs = ["skytest.hpp"],
+    include_prefix = "skytest",
+    deps = ["//:skytest"],
+)
 
 cc_binary(
     name = "minimal_pass",
     srcs = ["minimal_pass.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -15,7 +22,7 @@ synchronized_binary_log(
 cc_binary(
     name = "minimal_fail",
     srcs = ["minimal_fail.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -26,19 +33,19 @@ synchronized_binary_log(
 cc_test(
     name = "binary_comparisons",
     srcs = ["binary_comparisons.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 cc_test(
     name = "logical_operations",
     srcs = ["logical_operations.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 cc_binary(
     name = "additional_output",
     srcs = ["additional_output.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -49,7 +56,7 @@ synchronized_binary_log(
 cc_binary(
     name = "user_defined_predicates",
     srcs = ["user_defined_predicates.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -61,7 +68,7 @@ cc_binary(
     name = "described_predicates_20",
     srcs = ["described_predicates_20.cpp"],
     copts = ["-std=c++20"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -72,7 +79,7 @@ synchronized_binary_log(
 cc_binary(
     name = "described_predicates",
     srcs = ["described_predicates.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -83,24 +90,60 @@ synchronized_binary_log(
 cc_test(
     name = "type_parameterized",
     srcs = ["type_parameterized.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 cc_test(
     name = "value_parameterized",
     srcs = ["value_parameterized.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 cc_test(
     name = "param_ref_parameterized",
     srcs = ["param_ref_parameterized.cpp"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
 )
 
 cc_test(
     name = "param_parameterized",
     srcs = ["param_parameterized.cpp"],
     copts = ["-std=c++20"],
-    deps = ["//:skytest"],
+    deps = [":skytest_wrapper"],
+)
+
+update_targets = [
+    ":minimal_pass_log.update.sh",
+    ":minimal_fail_log.update.sh",
+    ":additional_output_log.update.sh",
+    ":user_defined_predicates_log.update.sh",
+    ":described_predicates_log.update.sh",
+    ":described_predicates_20_log.update.sh",
+]
+
+genrule(
+    name = "update_all_sh",
+    srcs = update_targets,
+    outs = ["update_all.sh"],
+    cmd = """
+set -euo pipefail
+echo "set -euo pipefail" > $@
+echo "" >> $@
+echo "for cmd in {update_targets}; do" >> $@
+echo "    \"\\$$cmd\"" >> $@
+echo "done" >> $@
+""".format(
+        update_targets = " ".join([
+            "$(rootpath {})".format(x)
+            for x in update_targets
+        ]),
+    ),
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+)
+
+sh_binary(
+    name = "update_all",
+    srcs = ["update_all.sh"],
+    data = update_targets,
 )

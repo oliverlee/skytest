@@ -12,20 +12,21 @@
 
 namespace skytest {
 
+struct colors
+{
+  std::string_view none = "\033[0m";
+  std::string_view dim = "\033[2m";
+  std::string_view pass = "\033[32m";
+  std::string_view fail = "\033[31m";
+};
+
 class default_printer
 {
   template <int N>
   using priority = detail::priority<N>;
 
   std::ostream& os_;
-
-  struct colors
-  {
-    static constexpr auto none = std::string_view{"\033[0m"};
-    static constexpr auto dim = std::string_view{"\033[2m"};
-    static constexpr auto pass = std::string_view{"\033[32m"};
-    static constexpr auto fail = std::string_view{"\033[31m"};
-  };
+  colors color_{};
 
   struct tests
   {
@@ -42,8 +43,8 @@ class default_printer
   template <class Relation>
   auto& print(std::true_type, const Relation& r) &
   {
-    const auto os = [&os = this->os_, &r]() -> auto& {
-      os << (r ? colors::pass : colors::fail) << colors::dim;
+    const auto os = [&os = this->os_, &color = this->color_, &r]() -> auto& {
+      os << (r ? color.pass : color.fail) << color.dim;
       return os;
     };
 
@@ -53,15 +54,14 @@ class default_printer
     os() << " " << Relation::predicate_type::symbol << " ";
     (*this) << detail::arg_fmt(std::get<1>(r.args));
 
-    os() << ")" << colors::none;
+    os() << ")" << color_.none;
 
     return *this;
   }
   template <class Relation>
   auto& print(std::false_type, const Relation& r) &
   {
-    os_ << (r ? colors::pass : colors::fail) << colors::dim << r
-        << colors::none;
+    os_ << (r ? color_.pass : color_.fail) << color_.dim << r << color_.none;
 
     return *this;
   }
@@ -80,10 +80,10 @@ class default_printer
   auto stream_impl(priority<4>, const summary& s) -> void
   {
     if (s.fail != 0) {
-      os_ << tests{s.pass} << " passed | " << colors::fail << tests{s.fail}
-          << " failed" << colors::none;
+      os_ << tests{s.pass} << " passed | " << color_.fail << tests{s.fail}
+          << " failed" << color_.none;
     } else {
-      os_ << colors::pass << "all tests passed" << colors::none << " ("
+      os_ << color_.pass << "all tests passed" << color_.none << " ("
           << tests{s.pass} << ")";
     }
 
@@ -94,35 +94,35 @@ class default_printer
   {
     os_ << "test `" << r.name << "`...";
 
-    [&os = os_, runtime = r, compile_time = r.compile_time] {
+    [&os = os_, &color = color_, runtime = r, compile_time = r.compile_time] {
       if (runtime and compile_time == true) {
-        os << colors::pass << "[CONSTEXPR PASS]";
+        os << color.pass << "[CONSTEXPR PASS]";
         return;
       }
       if (runtime and compile_time == std::nullopt) {
-        os << colors::pass << "[PASS]";
+        os << color.pass << "[PASS]";
         return;
       }
       if (runtime and compile_time == false) {
-        os << colors::pass << "[PASS]" << colors::fail << colors::dim
+        os << color.pass << "[PASS]" << color.fail << color.dim
            << "(CONSTEXPR FAIL)";
         return;
       }
       if (not runtime and compile_time == true) {
-        os << colors::fail << "[FAIL]" << colors::pass << colors::dim
+        os << color.fail << "[FAIL]" << color.pass << color.dim
            << "(CONSTEXPR PASS)";
         return;
       }
       if (not runtime and compile_time == std::nullopt) {
-        os << colors::fail << "[FAIL]";
+        os << color.fail << "[FAIL]";
         return;
       }
       if (not runtime and compile_time == false) {
-        os << colors::fail << "[CONSTEXPR FAIL]";
+        os << color.fail << "[CONSTEXPR FAIL]";
         return;
       }
     }();
-    os_ << colors::none;
+    os_ << color_.none;
 
     if (not r) {
       os_ << " " << r.source.file_name() << ":" << r.source.line() << "\n";
@@ -154,7 +154,8 @@ class default_printer
   }
 
 public:
-  default_printer(std::ostream& os) : os_{os} {}
+  explicit default_printer(std::ostream& os, colors c = {}) : os_{os}, color_{c}
+  {}
 
   template <class T>
   friend auto& operator<<(default_printer& p, const T& t)
