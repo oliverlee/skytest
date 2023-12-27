@@ -119,9 +119,6 @@ lcov_attrs = {
         "--experimental_generate_llvm_lcov",
         "--test_output=errors",
         "--extra_toolchains=//toolchain:gcc",
-        # https://github.com/bazelbuild/bazel/issues/13919
-        # https://github.com/bazelbuild/bazel/blob/master/tools/test/collect_cc_coverage.sh
-        "--test_env=COVERAGE_GCOV_OPTIONS=-b",
         # https://gcovr.com/en/stable/faq.html#why-does-c-code-have-so-many-uncovered-branches
         # https://stackoverflow.com/questions/42003783/lcov-gcov-branch-coverage-with-c-producing-branches-all-over-the-place
         "--cxxopt=-fno-exceptions",

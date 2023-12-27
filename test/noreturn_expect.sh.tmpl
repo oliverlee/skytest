@@ -7,15 +7,13 @@ WORKSPACE="${SCRIPT_NAME%.*}"
 
 cp "$BAZEL_WORKSPACE_ROOT/.bazeliskrc" .
 
-cat >.bazelrc <<EOF
+cp "$BAZEL_WORKSPACE_ROOT/.common.bazelrc" .bazelrc
+
+cat >> .bazelrc <<eof
 startup --max_idle_secs=1
 build --announce_rc
-build --color=yes
 build --show_timestamps
-build --incompatible_strict_action_env
-build --incompatible_enable_cc_toolchain_resolution
-build --action_env="BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1"
-EOF
+eof
 
 cat >WORKSPACE.bazel <<EOF
 workspace(name = "$WORKSPACE")
@@ -48,7 +46,14 @@ register_toolchains(
 EOF
 
 cat >BUILD.bazel <<EOF
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+# include_prefix doesn't appear to work with Bazel 7
+cc_library(
+    name = "external_skytest",
+    includes = ["external"],
+    deps = ["@skytest"],
+)
 
 cc_binary(
     name = "noreturn_expect",
@@ -60,7 +65,7 @@ cc_binary(
         "-Wextra",
     ],
     malloc = "$CC_BINARY_MALLOC",
-    deps = ["@skytest"],
+    deps = [":external_skytest"],
 )
 EOF
 
