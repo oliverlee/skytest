@@ -10,7 +10,7 @@ cc_test(
         "-Wno-c++17-extensions",
     ],
     tags = ["manual"],
-    deps = ["@skytest"],
+    deps = ["@skytest//:skytest.14"],
 )
 
 skytest_test(

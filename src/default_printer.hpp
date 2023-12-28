@@ -2,22 +2,23 @@
 
 #include "src/detail/arg_fmt.hpp"
 #include "src/detail/priority.hpp"
+#include "src/optional.hpp"
 #include "src/result.hpp"
+#include "src/string_view.hpp"
 #include "src/utility.hpp"
 
 #include <cstddef>
 #include <ostream>
-#include <string_view>
 #include <type_traits>
 
 namespace skytest {
 
 struct colors
 {
-  std::string_view none = "\033[0m";
-  std::string_view dim = "\033[2m";
-  std::string_view pass = "\033[32m";
-  std::string_view fail = "\033[31m";
+  string_view none = "\033[0m";
+  string_view dim = "\033[2m";
+  string_view pass = "\033[32m";
+  string_view fail = "\033[31m";
 };
 
 class default_printer
@@ -72,10 +73,7 @@ class default_printer
   {
     msg(os);
   }
-  static auto display(std::ostream& os, std::string_view msg) -> void
-  {
-    os << msg;
-  }
+  static auto display(std::ostream& os, string_view msg) -> void { os << msg; }
 
   auto stream_impl(priority<4>, const summary& s) -> void
   {
@@ -99,7 +97,7 @@ class default_printer
         os << color.pass << "[CONSTEXPR PASS]";
         return;
       }
-      if (runtime and compile_time == std::nullopt) {
+      if (runtime and compile_time == nullopt) {
         os << color.pass << "[PASS]";
         return;
       }
@@ -113,7 +111,7 @@ class default_printer
            << "(CONSTEXPR PASS)";
         return;
       }
-      if (not runtime and compile_time == std::nullopt) {
+      if (not runtime and compile_time == nullopt) {
         os << color.fail << "[FAIL]";
         return;
       }

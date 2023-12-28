@@ -3,7 +3,6 @@
 #include <array>
 #include <functional>
 #include <iterator>
-#include <string_view>
 #include <utility>
 
 auto main() -> int

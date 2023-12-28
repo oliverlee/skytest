@@ -1,9 +1,10 @@
 #pragma once
 
+#include "src/string_view.hpp"
+
 #include <array>
 #include <cstddef>
 #include <ostream>
-#include <string_view>
 
 namespace skytest {
 
@@ -15,8 +16,8 @@ class rope_ref
   template <std::size_t>
   friend struct rope;
 
-  const std::string_view* begin{nullptr};
-  const std::string_view* end{nullptr};
+  const string_view* begin{nullptr};
+  const string_view* end{nullptr};
 
 public:
   rope_ref() = default;
@@ -38,10 +39,10 @@ public:
 template <std::size_t N>
 struct rope
 {
-  std::array<std::string_view, N> strings;
+  std::array<string_view, N> strings;
 
   template <std::size_t M = N, class = std::enable_if_t<M == 1>>
-  constexpr operator std::string_view() const
+  constexpr operator string_view() const
   {
     return strings[0];
   }

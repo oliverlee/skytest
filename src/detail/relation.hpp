@@ -2,11 +2,11 @@
 
 #include "src/detail/arg_fmt.hpp"
 #include "src/detail/type_name.hpp"
+#include "src/string_view.hpp"
 #include "src/utility.hpp"
 
 #include <functional>
 #include <ostream>
-#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -16,21 +16,21 @@ struct and_
 {
   static constexpr auto name = type_name<and_>;
   using notation_type = notation::infix;
-  static constexpr auto symbol = std::string_view{"and"};
+  static constexpr auto symbol = string_view{"and"};
 };
 
 struct or_
 {
   static constexpr auto name = type_name<or_>;
   using notation_type = notation::infix;
-  static constexpr auto symbol = std::string_view{"or"};
+  static constexpr auto symbol = string_view{"or"};
 };
 
 struct not_
 {
   static constexpr auto name = type_name<not_>;
   using notation_type = notation::prefix;
-  static constexpr auto symbol = std::string_view{"not"};
+  static constexpr auto symbol = string_view{"not"};
 };
 
 template <class F, class... Ts>

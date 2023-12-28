@@ -1,10 +1,10 @@
 #pragma once
 
 #include "src/cfg.hpp"
+#include "src/optional.hpp"
 
 #include <cstdlib>
 #include <cstring>
-#include <optional>
 #include <ostream>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -17,7 +17,7 @@ struct aborts_fn
 {
   struct return_type
   {
-    std::optional<int> status{};
+    optional<int> status{};
 
     constexpr explicit operator bool() const
     {

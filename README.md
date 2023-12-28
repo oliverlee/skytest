@@ -204,7 +204,7 @@ The description of user defined predicates can be customized
 #include "skytest/skytest.hpp"
 
 #include <array>
-#include <string_view>
+#include "src/string_view.hpp"
 
 using namespace skytest::literals;
 using ::skytest::expect;
@@ -213,7 +213,7 @@ using ::skytest::pred;
 struct empty_desc
 {
   using notation_type = skytest::notation::function;
-  static constexpr auto symbol = std::string_view{"empty"};
+  static constexpr auto symbol = string_view{"empty"};
 };
 
 static constexpr auto empty = pred(empty_desc{}, [](const auto& rng) {

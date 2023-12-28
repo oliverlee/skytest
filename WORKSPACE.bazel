@@ -1,5 +1,9 @@
 workspace(name = "skytest")
 
+load("//:repositories.bzl", "skytest_repositories")
+
+skytest_repositories()
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 CXX_STANDARD = ["-std=c++17"]

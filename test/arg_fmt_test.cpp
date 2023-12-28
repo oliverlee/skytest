@@ -4,12 +4,11 @@
 #include <cstddef>
 #include <iterator>
 #include <ostream>
-#include <string_view>
 
 struct empty_desc
 {
   using notation_type = skytest::notation::function;
-  static constexpr auto symbol = std::string_view{"empty"};
+  static constexpr auto symbol = skytest::string_view{"empty"};
 };
 constexpr auto empty = skytest::pred(empty_desc{}, [](const auto& rng) {
   return std::empty(rng);

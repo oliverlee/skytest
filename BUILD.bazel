@@ -14,34 +14,70 @@ filegroup(
     srcs = [".clang-tidy"],
 )
 
+common_srcs = [
+    "src/aborts.hpp",
+    "src/cfg.hpp",
+    "src/default_printer.hpp",
+    "src/detail/arg_fmt.hpp",
+    "src/detail/is_defined.hpp",
+    "src/detail/is_range.hpp",
+    "src/detail/is_specialization_of.hpp",
+    "src/detail/predicate.hpp",
+    "src/detail/priority.hpp",
+    "src/detail/relation.hpp",
+    "src/detail/remove_cvref.hpp",
+    "src/detail/trim_substring.hpp",
+    "src/detail/type_name.hpp",
+    "src/expect.hpp",
+    "src/pred.hpp",
+    "src/result.hpp",
+    "src/rope.hpp",
+    "src/runner.hpp",
+    "src/source_location.hpp",
+    "src/test.hpp",
+    "src/test_param.hpp",
+    "src/utility.hpp",
+    "src/version.hpp",
+]
+
+cc_library(
+    name = "vocab_types",
+    hdrs = [
+        "src/optional.hpp",
+        "src/string_view.hpp",
+    ],
+    visibility = ["//visibility:private"],
+)
+
 cc_library(
     name = "skytest",
-    srcs = [
-        "src/aborts.hpp",
-        "src/cfg.hpp",
-        "src/default_printer.hpp",
-        "src/detail/arg_fmt.hpp",
-        "src/detail/is_defined.hpp",
-        "src/detail/is_range.hpp",
-        "src/detail/is_specialization_of.hpp",
-        "src/detail/predicate.hpp",
-        "src/detail/priority.hpp",
-        "src/detail/relation.hpp",
-        "src/detail/remove_cvref.hpp",
-        "src/detail/trim_substring.hpp",
-        "src/detail/type_name.hpp",
-        "src/expect.hpp",
-        "src/pred.hpp",
-        "src/result.hpp",
-        "src/rope.hpp",
-        "src/runner.hpp",
-        "src/source_location.hpp",
-        "src/test.hpp",
-        "src/test_param.hpp",
-        "src/utility.hpp",
-        "src/version.hpp",
-    ],
+    srcs = common_srcs,
     hdrs = ["skytest.hpp"],
     include_prefix = "skytest",
     visibility = ["//visibility:public"],
+    deps = [":vocab_types"],
+)
+
+cc_library(
+    name = "vocab_types.14",
+    hdrs = [
+        "src/backport/optional.hpp",
+        "src/backport/string_view.hpp",
+    ],
+    include_prefix = "src",
+    strip_include_prefix = "src/backport",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@optional",
+        "@string-view-lite",
+    ],
+)
+
+cc_library(
+    name = "skytest.14",
+    srcs = common_srcs,
+    hdrs = ["skytest.hpp"],
+    include_prefix = "skytest",
+    visibility = ["//visibility:public"],
+    deps = [":vocab_types.14"],
 )

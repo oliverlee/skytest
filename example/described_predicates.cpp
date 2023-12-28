@@ -2,7 +2,6 @@
 #include "skytest/skytest.hpp"
 
 #include <array>
-#include <string_view>
 
 using namespace skytest::literals;
 using ::skytest::expect;
@@ -11,7 +10,7 @@ using ::skytest::pred;
 struct empty_desc
 {
   using notation_type = skytest::notation::function;
-  static constexpr auto symbol = std::string_view{"empty"};
+  static constexpr auto symbol = skytest::string_view{"empty"};
 };
 
 static constexpr auto empty = pred(empty_desc{}, [](const auto& rng) {

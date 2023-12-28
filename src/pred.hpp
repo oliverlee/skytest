@@ -1,11 +1,11 @@
 #pragma once
 
 #include "src/detail/predicate.hpp"
+#include "src/string_view.hpp"
 #include "src/utility.hpp"
 #include "src/version.hpp"
 
 #include <functional>
-#include <string_view>
 
 #if SKYTEST_CXX20
 #include <array>
@@ -36,32 +36,32 @@ struct pred_fmt
   static constexpr struct eq_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{"=="};
+    static constexpr auto symbol = string_view{"=="};
   } eq{};
   static constexpr struct ne_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{"!="};
+    static constexpr auto symbol = string_view{"!="};
   } ne{};
   static constexpr struct lt_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{"<"};
+    static constexpr auto symbol = string_view{"<"};
   } lt{};
   static constexpr struct gt_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{">"};
+    static constexpr auto symbol = string_view{">"};
   } gt{};
   static constexpr struct le_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{"<="};
+    static constexpr auto symbol = string_view{"<="};
   } le{};
   static constexpr struct ge_
   {
     using notation_type = notation::infix;
-    static constexpr auto symbol = std::string_view{">="};
+    static constexpr auto symbol = string_view{">="};
   } ge{};
 };
 
@@ -89,7 +89,7 @@ struct string_literal
     }
   }
 
-  constexpr operator std::string_view() const
+  constexpr operator string_view() const
   {
     return {chars.begin(), chars.size()};
   }
@@ -97,7 +97,7 @@ struct string_literal
 template <string_literal symbol>
 struct string_literal_constant
 {
-  static constexpr auto value = std::string_view{symbol};
+  static constexpr auto value = string_view{symbol};
 };
 template <string_literal symbol>
 constexpr auto infix =

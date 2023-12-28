@@ -24,6 +24,15 @@ local_repository(
 )
 
 local_repository(
+    name = "optional-lite",
+    path = "$BAZEL_EXTERNAL_DIR/optional-lite",
+)
+local_repository(
+    name = "string-view-lite",
+    path = "$BAZEL_EXTERNAL_DIR/string-view-lite",
+)
+
+local_repository(
     name = "rules_cc",
     path = "$BAZEL_EXTERNAL_DIR/rules_cc",
 )

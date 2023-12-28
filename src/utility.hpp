@@ -1,7 +1,8 @@
 #pragma once
 
+#include "src/string_view.hpp"
+
 #include <cstddef>
-#include <string_view>
 
 namespace skytest {
 
@@ -17,7 +18,7 @@ struct notation
 
 struct empty_symbol
 {
-  static constexpr auto value = std::string_view{};
+  static constexpr auto value = string_view{};
 };
 template <class Symbol = empty_symbol, class Notation = notation::function>
 struct predicate_format

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string_view>
+#include "src/string_view.hpp"
 
 namespace skytest {
 
 class source_location
 {
-  std::string_view file_{"unknown"};
+  string_view file_{"unknown"};
   int line_{-1};
 
 public:

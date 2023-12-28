@@ -3,16 +3,16 @@
 #include "src/detail/relation.hpp"
 #include "src/detail/remove_cvref.hpp"
 #include "src/detail/type_name.hpp"
+#include "src/string_view.hpp"
 #include "src/utility.hpp"
 
-#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
 namespace skytest::detail {
 
-template <class F, const std::string_view& Name, class Format>
+template <class F, const string_view& Name, class Format>
 struct predicate : F
 {
   static constexpr auto name = Name;

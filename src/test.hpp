@@ -4,13 +4,13 @@
 #include "src/detail/is_specialization_of.hpp"
 #include "src/detail/remove_cvref.hpp"
 #include "src/detail/type_name.hpp"
+#include "src/optional.hpp"
 #include "src/result.hpp"
 #include "src/rope.hpp"
+#include "src/string_view.hpp"
 #include "src/version.hpp"
 
 #include <cstddef>
-#include <optional>
-#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -22,7 +22,7 @@ class parameterized_test;
 
 struct runtime_only_result
 {
-  static constexpr auto value = std::optional<bool>{};
+  static constexpr auto value = optional<bool>{};
 };
 template <class F, class = void>
 struct compile_time_result : runtime_only_result
@@ -30,7 +30,7 @@ struct compile_time_result : runtime_only_result
 template <class F>
 struct compile_time_result<F, std::enable_if_t<bool(F{}()) or true>>
 {
-  static constexpr auto value = std::optional<bool>{bool{F{}()}};
+  static constexpr auto value = optional<bool>{bool{F{}()}};
 };
 
 template <const auto& f, class F = remove_cvref_t<decltype(f)>>
@@ -110,7 +110,7 @@ public:
 namespace literals {
 constexpr auto operator""_test(const char* name, std::size_t len)
 {
-  return detail::test{rope<1>{std::string_view{name, len}}};
+  return detail::test{rope<1>{string_view{name, len}}};
 }
 }  // namespace literals
 }  // namespace skytest
