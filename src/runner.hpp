@@ -26,7 +26,7 @@ class runner
 public:
   template <
       class P = Printer,
-      class = std::enable_if_t<std::is_default_constructible_v<P>>>
+      class = std::enable_if_t<std::is_default_constructible<P>::value>>
   runner() : printer_{}
   {}
 
@@ -34,7 +34,7 @@ public:
 
   template <
       class... Args,
-      class = std::enable_if_t<std::is_constructible_v<Printer, Args...>>>
+      class = std::enable_if_t<std::is_constructible<Printer, Args...>::value>>
   runner(Args&&... args) : printer_{std::forward<Args>(args)...}
   {}
 

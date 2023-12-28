@@ -135,14 +135,14 @@ class default_printer
   auto stream_impl(priority<2>, const Relation& r)
       -> decltype(std::declval<typename Relation::predicate_type>(), void())
   {
-    static constexpr auto infix = std::is_same_v<
+    static constexpr auto infix = std::is_same<
         notation::infix,
-        typename Relation::predicate_type::notation_type>;
+        typename Relation::predicate_type::notation_type>::value;
 
     static constexpr auto color_args =
         Relation::predicate_type::symbol == "and";
 
-    print(std::bool_constant < infix and color_args > {}, r);
+    print(std::integral_constant < bool, infix and color_args > {}, r);
   }
   auto stream_impl(priority<1>, bool b) -> void { print(std::false_type{}, b); }
   template <class T>

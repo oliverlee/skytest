@@ -1,11 +1,13 @@
 #pragma once
 
+#include "src/detail/conjunction.hpp"
 #include "src/detail/is_defined.hpp"
 #include "src/detail/is_range.hpp"
 #include "src/detail/priority.hpp"
 #include "src/detail/remove_cvref.hpp"
 #include "src/detail/trim_substring.hpp"
 #include "src/detail/type_name.hpp"
+#include "src/detail/void_t.hpp"
 #include "src/rope.hpp"
 #include "src/test.hpp"
 
@@ -37,7 +39,7 @@ template <class T, class = void>
 struct has_static_value : std::false_type
 {};
 template <class T>
-struct has_static_value<T, std::void_t<decltype(T::value)>> : std::true_type
+struct has_static_value<T, void_t<decltype(T::value)>> : std::true_type
 {};
 template <class T>
 inline constexpr auto has_static_value_v = has_static_value<T>::value;
@@ -54,7 +56,7 @@ struct static_size
   template <class U, class = std::enable_if_t<is_defined_v<std::tuple_size<U>>>>
   static constexpr auto impl(priority<0>)
   {
-    return std::tuple_size_v<U>;
+    return std::tuple_size<U>::value;
   }
 
   static constexpr auto value =
@@ -114,7 +116,7 @@ struct param_invocable_;
 
 template <std::size_t... Is, class F, class Params>
 struct param_invocable_<std::index_sequence<Is...>, F, Params>
-    : std::conjunction<returns_result<F, param_reference_t<Is, Params>>...>
+    : conjunction<returns_result<F, param_reference_t<Is, Params>>...>
 {};
 
 template <class F, class Params>

@@ -41,12 +41,13 @@ struct static_closure : F
 
 template <class T>
 constexpr auto is_static_closure_constructible_v =
-    std::is_empty_v<T> and std::is_copy_constructible_v<T>;
+    std::is_empty<T>::value and std::is_copy_constructible<T>::value;
 
 template <class F, class... Args>
 struct returns_result
     : is_specialization_of<
-          std::invoke_result_t<const remove_cvref_t<F>&, Args...>,
+          decltype(std::declval<const remove_cvref_t<F>&>()(
+              std::declval<Args>()...)),
           result>
 {};
 

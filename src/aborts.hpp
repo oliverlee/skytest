@@ -51,7 +51,7 @@ struct aborts_fn
   };
 
   template <class F, class Override = override>
-  constexpr auto operator()(F&& f) const -> return_type
+  auto operator()(F&& f) const -> return_type
   {
     cfg<Override>.printer_ << do_flush{};
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/detail/arg_fmt.hpp"
+#include "src/detail/as_const.hpp"
 #include "src/detail/type_name.hpp"
 #include "src/string_view.hpp"
 #include "src/utility.hpp"
@@ -80,7 +81,7 @@ struct relation
   template <class G, class... Us>
   constexpr friend auto operator and(relation&& lhs, relation<G, Us...>&& rhs)
   {
-    const auto result = std::as_const(lhs) and std::as_const(rhs);
+    const auto result = as_const(lhs) and as_const(rhs);
 
     return relation<and_, relation, relation<G, Us...>>{
         {std::move(lhs), std::move(rhs)}, result};
@@ -88,14 +89,14 @@ struct relation
   template <class G, class... Us>
   constexpr friend auto operator or(relation&& lhs, relation<G, Us...>&& rhs)
   {
-    const auto result = std::as_const(lhs) or std::as_const(rhs);
+    const auto result = as_const(lhs) or as_const(rhs);
 
     return relation<or_, relation, relation<G, Us...>>{
         {std::move(lhs), std::move(rhs)}, result};
   }
   constexpr friend auto operator not(relation&& r)
   {
-    const auto result = not std::as_const(r);
+    const auto result = not as_const(r);
 
     return relation<not_, relation>{{std::move(r)}, result};
   }

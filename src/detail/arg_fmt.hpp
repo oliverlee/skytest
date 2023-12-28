@@ -21,13 +21,17 @@ class arg_fmt_fn
   struct ostream_inserter
   {
     template <class T>
-    auto operator()(const T& value)
+    auto operator()(const T& value) const
         -> decltype(std::declval<std::ostream&>() << value);
+
+    auto operator()(...) const -> void;
   };
 
   template <class T>
-  static constexpr auto is_ostreamable_v =
-      std::is_invocable_r_v<std::ostream&, ostream_inserter, const T&>;
+  static constexpr auto is_ostreamable_v = std::is_same<
+      std::ostream&,
+      decltype(std::declval<ostream_inserter>()(std::declval<const T&>()))>::
+      value;
 
   template <
       class R,
