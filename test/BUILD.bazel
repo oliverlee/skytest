@@ -2,6 +2,17 @@ load("//rules:skytest_test.bzl", "skytest_test")
 load("//rules:sh_binary_template.bzl", "sh_binary_template")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
+cc_test(
+    name = "pass_test.14",
+    srcs = ["pass_test.cpp"],
+    copts = [
+        "-std=c++14",
+        "-Wno-c++17-extensions",
+    ],
+    tags = ["manual"],
+    deps = ["@skytest"],
+)
+
 skytest_test(
     name = "pass_test",
     srcs = ["pass_test.cpp"],
