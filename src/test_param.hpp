@@ -10,6 +10,7 @@
 #include "src/detail/void_t.hpp"
 #include "src/rope.hpp"
 #include "src/test.hpp"
+#include "src/version.hpp"
 
 #include <cstddef>
 #include <cstdio>
@@ -151,21 +152,21 @@ struct param_bound_closure
   }
 };
 
-template <const auto& func, const auto& params>
+template <class F, class P, const F& func, const P& params>
 struct param_bound_static_closure
 {
   template <
       std::size_t I,
-      class P = remove_cvref_t<decltype(params)>,
-      std::enable_if_t<not is_range_v<P>, bool> = true>
+      class P_ = P,
+      std::enable_if_t<not is_range_v<P_>, bool> = true>
   constexpr auto operator[](constant<I>) const
   {
     return [] { return func(get<I>(params)); };
   }
   template <
       std::size_t I,
-      class P = remove_cvref_t<decltype(params)>,
-      std::enable_if_t<is_range_v<P>, bool> = true>
+      class P_ = P,
+      std::enable_if_t<is_range_v<P_>, bool> = true>
   constexpr auto operator[](constant<I>) const
   {
     return [] { return func(params.begin()[I]); };
@@ -223,7 +224,7 @@ private:
       // other options will alloc
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
       std::sprintf(s.data(), "%zu", i++);
-      test{value_param_name(s.data())} = g[it];
+      test<4>{value_param_name(s.data())} = g[it];
     }
   }
   template <std::size_t... Is, class G>
@@ -232,7 +233,8 @@ private:
     static constexpr auto name_kind = is_range<param_resolve_t<params_type>>{};
 
     std::ignore =
-        ((test{param_name<Is>(name_kind)} = g[constant<Is>{}], true) and ...);
+        ((test<4>{param_name<Is>(name_kind)} = g[constant<Is>{}], true) and
+         ...);
   }
 
 public:
@@ -268,7 +270,11 @@ public:
 
     assign_impl(
         std::make_index_sequence<static_size_v<params_type>>{},
-        param_bound_static_closure<f, p>{});
+        param_bound_static_closure<
+            remove_cvref_t<decltype(f)>,
+            remove_cvref_t<decltype(p)>,
+            f,
+            p>{});
   }
 };
 
@@ -322,6 +328,7 @@ struct param_impl
   }
 };
 
+#if SKYTEST_CXX17
 template <const auto& Params>
 struct param_ref_t : param_impl<decltype(Params), Params>
 {};
@@ -336,6 +343,7 @@ inline constexpr auto param = param_t<Params>{};
 
 template <class... Ts>
 inline constexpr auto types = param_ref<detail::type_params<Ts...>>;
+#endif
 
 }  // namespace skytest
 
