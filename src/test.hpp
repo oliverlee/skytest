@@ -45,6 +45,7 @@ struct static_closure : F
 template <class T>
 constexpr auto is_static_closure_constructible_v =
     std::is_empty<T>::value and std::is_copy_constructible<T>::value and
+    // TODO avoid hardcoding C++ version
     std::integral_constant<bool, SKYTEST_CXX17>::value;
 
 template <class F, class... Args>

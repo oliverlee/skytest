@@ -3,8 +3,8 @@ load("//rules:sh_binary_template.bzl", "sh_binary_template")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_test(
-    name = "pass_test.14",
-    srcs = ["pass_test.cpp"],
+    name = "cpp14_test",
+    srcs = ["cpp14_test.cpp"],
     copts = [
         "-std=c++14",
         "-Wno-c++17-extensions",

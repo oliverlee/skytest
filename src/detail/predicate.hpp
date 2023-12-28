@@ -18,7 +18,7 @@ struct predicate : F
 {
   static constexpr auto name = Name;
   using notation_type = typename Format::notation_type;
-  static constexpr auto symbol = Format::symbol;
+  static constexpr decltype(Format::symbol) symbol = Format::symbol;
 
   template <
       class T = F,
@@ -44,5 +44,10 @@ struct predicate : F
         std::tuple<std::decay_t<Ts>...>{std::forward<Ts>(args)...}, value};
   }
 };
+
+template <class F, const string_view& Name, class Format>
+constexpr string_view predicate<F, Name, Format>::name;
+template <class F, const string_view& Name, class Format>
+constexpr decltype(Format::symbol) predicate<F, Name, Format>::symbol;
 
 }  // namespace skytest::detail
