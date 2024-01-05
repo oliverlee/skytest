@@ -57,6 +57,10 @@ When running tests, `skytest` will attempt to invoke test closures at
 compile-time. If able to, results will be classified `CONSTEXPR PASS` or
 `CONSTEXPR FAIL` instead of `PASS` or `FAIL`.
 
+The `ctest` literal can be used to require closures to be tested at
+compile-time. In order to be usable with `ctest`, test closures must be empty
+and non-constexpr functions must not be invoked.
+
 ## examples
 
 #### binary comparisons

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source test/prelude.sh
+prelude "${BASH_SOURCE[0]}"
+
+cat >>BUILD.bazel <<EOF
+cc_binary(
+    name = "ctest_build_failure",
+    srcs = ["ctest_build_failure.cpp"],
+    copts = [
+        "-std=c++$CC_BINARY_CXXSTD",
+        "-Werror",
+        "-Wall",
+        "-Wextra",
+    ],
+    malloc = "$CC_BINARY_MALLOC",
+    deps = [":external_skytest"],
+)
+EOF
+
+cat >ctest_build_failure.cpp <<EOF
+#include "skytest/skytest.hpp"
+
+auto x = false;
+
+auto main() -> int
+{
+    using namespace ::skytest::literals;
+    using ::skytest::expect;
+    using ::skytest::types;
+
+    "test1"_ctest = [] {
+        return expect(x);
+    };
+
+    "test2"_ctest * types<int> = [](auto) {
+        return expect(x);
+    };
+}
+EOF
+
+bazel build -s //:ctest_build_failure

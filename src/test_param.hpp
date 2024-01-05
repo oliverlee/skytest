@@ -170,24 +170,28 @@ struct param_bound_static_closure
   }
 };
 
-template <class Params>
+template <class Params, class Style>
 class parameterized_test
 {
 public:
   using params_type = Params;
+  using style_type = Style;
 
 private:
+  using rope_type = rope<1>;
+  using derived_rope_type = rope<4>;
+
   const params_type& params_;
-  rope<1> basename_;
+  rope_type basename_;
 
   constexpr auto value_param_name(std::string_view s) const
   {
-    return rope<4>{basename_, " [", s, "]"};
+    return derived_rope_type{basename_, " [", s, "]"};
   }
   template <std::size_t I>
   constexpr auto type_param_name() const
   {
-    return rope<4>{
+    return derived_rope_type{
         basename_, " <", type_name<param_reference_t<I, params_type>>, ">"};
   }
 
@@ -221,7 +225,7 @@ private:
       // other options will alloc
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
       std::sprintf(s.data(), "%zu", i++);
-      test{value_param_name(s.data())} = g[it];
+      test<derived_rope_type, style_type>{value_param_name(s.data())} = g[it];
     }
   }
   template <std::size_t... Is, class G>
@@ -230,12 +234,15 @@ private:
     static constexpr auto name_kind = is_range<param_resolve_t<params_type>>{};
 
     std::ignore =
-        ((test{param_name<Is>(name_kind)} = g[constant<Is>{}], true) and ...);
+        ((test<derived_rope_type, style_type>{param_name<Is>(name_kind)} =
+              g[constant<Is>{}],
+          true) and
+         ...);
   }
 
 public:
   constexpr explicit parameterized_test(
-      rope<1> basename, const params_type& params)
+      rope_type basename, const params_type& params)
       : params_{params}, basename_{basename}
   {}
 
