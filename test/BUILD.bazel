@@ -313,3 +313,26 @@ skytest_test(
         "11 |\\s*expect\\(.*\\).*;",
     ],
 )
+
+skytest_test(
+    name = "requires_constexpr_test",
+    srcs = ["requires_constexpr_test.cpp"],
+    stdout = [
+        "test1.*CONSTEXPR",
+        "test2.*CONSTEXPR",
+        "all tests passed.*2 tests",
+    ],
+)
+
+skytest_test(
+    name = "ctest_build_failure_test",
+    srcs = ["ctest_build_failure.sh.tmpl"],
+    binary_type = sh_binary_template,
+    return_code = 1,
+    stderr = [
+        "11.*test1",
+        "11.*error.*the value of .*x.* is not usable in a constant expression",
+        "15.*test2",
+        "15.*error.*the value of .*x.* is not usable in a constant expression",
+    ],
+)

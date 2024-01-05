@@ -3,13 +3,14 @@
 #include "src/cfg.hpp"
 #include "src/detail/is_specialization_of.hpp"
 #include "src/detail/remove_cvref.hpp"
+#include "src/detail/static_closure.hpp"
+#include "src/detail/test_style.hpp"
 #include "src/detail/type_name.hpp"
 #include "src/result.hpp"
 #include "src/rope.hpp"
 #include "src/version.hpp"
 
 #include <cstddef>
-#include <optional>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -17,31 +18,8 @@
 namespace skytest {
 namespace detail {
 
-template <class Params>
+template <class Params, class Style>
 class parameterized_test;
-
-struct runtime_only_result
-{
-  static constexpr auto value = std::optional<bool>{};
-};
-template <class F, class = void>
-struct compile_time_result : runtime_only_result
-{};
-template <class F>
-struct compile_time_result<F, std::enable_if_t<bool(F{}()) or true>>
-{
-  static constexpr auto value = std::optional<bool>{bool{F{}()}};
-};
-
-template <const auto& f, class F = remove_cvref_t<decltype(f)>>
-struct static_closure : F
-{
-  constexpr static_closure() : F{f} {}
-};
-
-template <class T>
-constexpr auto is_static_closure_constructible_v =
-    std::is_empty_v<T> and std::is_copy_constructible_v<T>;
 
 template <class F, class... Args>
 struct returns_result
@@ -53,26 +31,25 @@ struct returns_result
 template <class F, class... Args>
 inline constexpr auto returns_result_v = returns_result<F, Args...>::value;
 
-template <std::size_t N>
+template <class Rope, class Style>
 class test
 {
-  rope<N> name_;
+  using rope_type = Rope;
 
-  template <
-      class F,
-      class Pass = compile_time_result<F>,
-      class Override = override>
+  rope_type name_;
+
+  template <class F, class S = Style, class Override = override>
   auto assign_impl(const F& func) -> void
   {
     auto result = func();
     result.name = name_;
-    result.compile_time = Pass::value;
+    result.compile_time = S::template value<F>;
 
     cfg<Override>.report(result);
   }
 
 public:
-  constexpr explicit test(rope<N> name) : name_{name} {}
+  constexpr explicit test(rope_type name) : name_{name} {}
 
   template <
       class F,
@@ -81,7 +58,7 @@ public:
           bool> = true>
   auto operator=(const F& func) && -> void
   {
-    assign_impl<F, runtime_only_result>(func);
+    assign_impl(func);
   }
   template <
       class F,
@@ -98,10 +75,10 @@ public:
   constexpr friend auto operator*(const test& t, const Params& params)
   {
     static_assert(
-        N == 1,
+        rope_type::size == 1,
         "parameterization of an already "
         "parameterized test");
-    return detail::parameterized_test<Params>{t.name_, params};
+    return detail::parameterized_test<Params, Style>{t.name_, params};
   }
 };
 
@@ -110,7 +87,17 @@ public:
 namespace literals {
 constexpr auto operator""_test(const char* name, std::size_t len)
 {
-  return detail::test{rope<1>{std::string_view{name, len}}};
+  using rope_type = rope<1>;
+  using style_type = detail::test_style::compile_time_if_possible;
+  return detail::test<rope_type, style_type>{
+      rope_type{std::string_view{name, len}}};
+}
+constexpr auto operator""_ctest(const char* name, std::size_t len)
+{
+  using rope_type = rope<1>;
+  using style_type = detail::test_style::compile_time;
+  return detail::test<rope_type, style_type>{
+      rope_type{std::string_view{name, len}}};
 }
 }  // namespace literals
 }  // namespace skytest

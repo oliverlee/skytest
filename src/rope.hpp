@@ -38,6 +38,8 @@ public:
 template <std::size_t N>
 struct rope
 {
+  static constexpr auto size = N;
+
   std::array<std::string_view, N> strings;
 
   template <std::size_t M = N, class = std::enable_if_t<M == 1>>

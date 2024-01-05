@@ -28,6 +28,8 @@ cc_library(
         "src/detail/priority.hpp",
         "src/detail/relation.hpp",
         "src/detail/remove_cvref.hpp",
+        "src/detail/static_closure.hpp",
+        "src/detail/test_style.hpp",
         "src/detail/trim_substring.hpp",
         "src/detail/type_name.hpp",
         "src/expect.hpp",
