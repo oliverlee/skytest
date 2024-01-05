@@ -11,6 +11,12 @@ auto main() -> int
   using ::skytest::expect;
   using ::skytest::lt;
 
+  struct test1
+  {
+    constexpr auto operator()() const { return expect(true); }
+  };
+  "expect true"_test = test1{};
+
   "expect true"_test = [] { return expect(true); };
 
   "type param"_test * std::tuple<int, float, double>{} = [](auto param) {
