@@ -1,60 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TEST_PATH="$(readlink -f ${BASH_SOURCE[0]})"
-SCRIPT_NAME="${TEST_PATH##*/test/}}"
-WORKSPACE="${SCRIPT_NAME%.*}"
+source test/prelude.sh
+prelude "${BASH_SOURCE[0]}"
 
-cp "$BAZEL_WORKSPACE_ROOT/.bazeliskrc" .
-
-cp "$BAZEL_WORKSPACE_ROOT/.common.bazelrc" .bazelrc
-
-cat >> .bazelrc <<eof
-startup --max_idle_secs=1
-build --announce_rc
-build --show_timestamps
-eof
-
-cat >WORKSPACE.bazel <<EOF
-workspace(name = "$WORKSPACE")
-
-local_repository(
-    name = "skytest",
-    path = "$BAZEL_WORKSPACE_ROOT",
-)
-
-local_repository(
-    name = "rules_cc",
-    path = "$BAZEL_EXTERNAL_DIR/rules_cc",
-)
-local_repository(
-    name = "bazel_bootlin",
-    path = "$BAZEL_EXTERNAL_DIR/bazel_bootlin",
-)
-local_repository(
-    name = "gcc_toolchain_files",
-    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain_files",
-)
-local_repository(
-    name = "gcc_toolchain",
-    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain",
-)
-
-register_toolchains(
-    "@gcc_toolchain//:toolchain",
-)
-EOF
-
-cat >BUILD.bazel <<EOF
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-
-# include_prefix doesn't appear to work with Bazel 7
-cc_library(
-    name = "external_skytest",
-    includes = ["external"],
-    deps = ["@skytest"],
-)
-
+cat >>BUILD.bazel <<EOF
 cc_binary(
     name = "noreturn_expect",
     srcs = ["noreturn_expect.cpp"],
@@ -87,12 +37,4 @@ auto main() -> int
 }
 EOF
 
-XDG_CACHE_HOME="$XDG_CACHE_HOME"
-export XDG_CACHE_HOME
-
-$BAZEL_BIN \
-    --nosystem_rc \
-    --nohome_rc \
-    build \
-    -s \
-    //:noreturn_expect
+bazel build -s //:noreturn_expect
