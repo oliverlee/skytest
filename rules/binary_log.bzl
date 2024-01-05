@@ -22,9 +22,9 @@ def binary_log(
     """
     native.genrule(
         name = name,
-        srcs = [src],
+        tools = [src],
         outs = [log],
-        cmd = "$(execpath {}) > $@ || true".format(src),
+        cmd = "$(execpath {}) &> $@ || true".format(src),
         testonly = True,
         tags = ["manual"],
         visibility = ["//visibility:private"],
@@ -64,17 +64,14 @@ def synchronized_binary_log(
 
     native.genrule(
         name = name + "_update_sh",
-        srcs = [
-            src,
-            log,
-        ],
+        srcs = [log],
+        tools = [src],
         outs = [name + ".update.sh"],
         cmd = """
 set -euo pipefail
 echo "set -euo pipefail" > $@
 echo "" >> $@
-echo "cd {workspace_dir}" >> $@
-echo "$(execpath {src}) > $(rootpath {log}) || true" >> $@
+echo "{workspace_dir}/$(execpath {src}) &> {workspace_dir}/$(rootpath {log}) || true" >> $@
 """.format(
             src = src,
             log = log,
@@ -96,4 +93,5 @@ echo "$(execpath {src}) > $(rootpath {log}) || true" >> $@
     native.sh_binary(
         name = name + ".update",
         srcs = [name + ".update.sh"],
+        data = [src],
     )

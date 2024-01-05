@@ -4,8 +4,11 @@ set -euo pipefail
 function prelude() {
 
 TEST_PATH="$(readlink -f $1)"
-SCRIPT_NAME="${TEST_PATH##*/test/}}"
-WORKSPACE="${SCRIPT_NAME%.*}"
+
+PRUNE_TEST="${TEST_PATH##*/test/}}"
+PRUNE_EXAMPLE="${PRUNE_TEST##*/example/}}"
+
+WORKSPACE="${PRUNE_EXAMPLE%.*}"
 
 cat >> .bazelrc <<EOF
 startup --max_idle_secs=1

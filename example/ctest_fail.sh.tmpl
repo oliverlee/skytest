@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source $(find -L . -path \*/rules/prelude.sh -print -quit)
+prelude "${BASH_SOURCE[0]}"
+
+cp $(find -L . -path \*/example/ctest_fail.cpp -print -quit) .
+
+cat >>BUILD.bazel <<EOF
+cc_binary(
+    name = "ctest_fail",
+    srcs = ["ctest_fail.cpp"],
+    copts = [
+        "-Werror",
+        "-Wall",
+        "-Wextra",
+    ],
+    deps = [":external_skytest"],
+)
+EOF
+
+startup_opts=(
+    --output_user_root=/tmp/bazel
+    --output_base=/tmp/bazel/output
+)
+build_opts=(
+    --symlink_prefix=/
+    --noshow_progress
+    --ui_event_filters=-info,-stdout
+    --color=no
+)
+
+start="error: the value of 'n' is not usable in a constant expression"
+stop="Target .*:ctest_fail failed to build"
+
+bazel \
+    ${startup_opts[@]} \
+    build \
+    ${build_opts[@]} \
+    //:ctest_fail 2>&1 \
+    | sed -n "/$start/,/$stop/ p" `# only print from start to stop` \
+    | sed '$d'                     # remove the stop line
+
