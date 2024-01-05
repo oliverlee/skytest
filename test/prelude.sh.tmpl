@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+function prelude() {
+
+TEST_PATH="$(readlink -f $1)"
+SCRIPT_NAME="${TEST_PATH##*/test/}}"
+WORKSPACE="${SCRIPT_NAME%.*}"
+
+cat >> .bazelrc <<EOF
+startup --max_idle_secs=1
+build --announce_rc
+build --show_timestamps
+EOF
+
+cp "$BAZEL_WORKSPACE_ROOT/.bazeliskrc" .
+
+cp "$BAZEL_WORKSPACE_ROOT/.common.bazelrc" .bazelrc
+
+cat > WORKSPACE.bazel <<EOF
+workspace(name = "$WORKSPACE")
+
+local_repository(
+    name = "skytest",
+    path = "$BAZEL_WORKSPACE_ROOT",
+)
+
+local_repository(
+    name = "rules_cc",
+    path = "$BAZEL_EXTERNAL_DIR/rules_cc",
+)
+local_repository(
+    name = "bazel_bootlin",
+    path = "$BAZEL_EXTERNAL_DIR/bazel_bootlin",
+)
+local_repository(
+    name = "gcc_toolchain_files",
+    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain_files",
+)
+local_repository(
+    name = "gcc_toolchain",
+    path = "$BAZEL_EXTERNAL_DIR/gcc_toolchain",
+)
+
+register_toolchains(
+    "@gcc_toolchain//:toolchain",
+)
+EOF
+
+cat >BUILD.bazel <<EOF
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+# include_prefix doesn't appear to work with Bazel 7
+cc_library(
+    name = "external_skytest",
+    includes = ["external"],
+    deps = ["@skytest"],
+)
+EOF
+
+}
+
+function bazel() {
+
+XDG_CACHE_HOME="$XDG_CACHE_HOME" \
+  $BAZEL_BIN --nosystem_rc --nohome_rc $@
+
+}

@@ -3,13 +3,6 @@ Test stdout and return code of a unit test for skytest.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load(
-    "@local_config_info//:defs.bzl",
-    "BAZEL_BIN",
-    "BAZEL_EXTERNAL_DIR",
-    "BAZEL_WORKSPACE_ROOT",
-    "XDG_CACHE_HOME",
-)
 load(":sh_binary_template.bzl", "sh_binary_template")
 
 def skytest_test(
@@ -108,13 +101,10 @@ echo "done" >> $@
         elif binary_type == sh_binary_template:
             binary_kwargs = {
                 "substitutions": {
-                    "$BAZEL_BIN": BAZEL_BIN,
-                    "$BAZEL_EXTERNAL_DIR": BAZEL_EXTERNAL_DIR,
-                    "$BAZEL_WORKSPACE_ROOT": BAZEL_WORKSPACE_ROOT,
-                    "$XDG_CACHE_HOME": XDG_CACHE_HOME,
                     "$CC_BINARY_CXXSTD": std,
                     "$CC_BINARY_MALLOC": malloc,
                 },
+                "deps": ["//test:prelude_sh"],
             }
         else:
             fail("unhandled binary_type: {}".format(binary_type))

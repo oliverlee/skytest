@@ -9,7 +9,8 @@ def sh_binary_template(
         substitutions,
         template = None,
         out = None,
-        srcs = []):
+        srcs = [],
+        deps = []):
     """
     Combines expand_template with sh_binary
 
@@ -24,6 +25,8 @@ def sh_binary_template(
         Key-value mappings.
       srcs: string_label_list
         `srcs` used for `sh_binary`
+      deps: string_label_list
+        `deps` used for `sh_binary`
     """
     if len(srcs) == 1 and template == None:
         template = srcs[0]
@@ -45,4 +48,5 @@ def sh_binary_template(
     native.sh_binary(
         name = name,
         srcs = [binary_src(src) for src in srcs],
+        deps = deps,
     )

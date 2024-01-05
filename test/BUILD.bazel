@@ -1,6 +1,34 @@
 load("//rules:skytest_test.bzl", "skytest_test")
 load("//rules:sh_binary_template.bzl", "sh_binary_template")
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load(
+    "@local_config_info//:defs.bzl",
+    "BAZEL_BIN",
+    "BAZEL_EXTERNAL_DIR",
+    "BAZEL_WORKSPACE_ROOT",
+    "XDG_CACHE_HOME",
+)
+
+expand_template(
+    name = "gen_prelude_sh",
+    testonly = True,
+    out = "prelude.sh",
+    substitutions = {
+        "$BAZEL_BIN": BAZEL_BIN,
+        "$BAZEL_EXTERNAL_DIR": BAZEL_EXTERNAL_DIR,
+        "$BAZEL_WORKSPACE_ROOT": BAZEL_WORKSPACE_ROOT,
+        "$XDG_CACHE_HOME": XDG_CACHE_HOME,
+    },
+    tags = ["manual"],
+    template = "prelude.sh.tmpl",
+    visibility = ["//visibility:private"],
+)
+
+sh_library(
+    name = "prelude_sh",
+    srcs = ["prelude.sh"],
+)
 
 skytest_test(
     name = "pass_test",
