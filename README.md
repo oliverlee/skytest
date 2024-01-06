@@ -57,9 +57,42 @@ When running tests, `skytest` will attempt to invoke test closures at
 compile-time. If able to, results will be classified `CONSTEXPR PASS` or
 `CONSTEXPR FAIL` instead of `PASS` or `FAIL`.
 
+<details><summary>requiring compile-time evaluation of tests</summary>
+
+
 The `ctest` literal can be used to require closures to be tested at
 compile-time. In order to be usable with `ctest`, test closures must be empty
 and non-constexpr functions must not be invoked.
+
+```cpp:example/ctest_fail.cpp
+#include "skytest/skytest.hpp"
+
+auto main() -> int
+{
+  using namespace skytest::literals;
+  using ::skytest::expect;
+  using ::skytest::lt;
+
+  static auto n = 0;
+  "read non-const"_ctest = [] { return expect(lt(0, n)); };
+}
+
+```
+
+results in the follow build error (snippet):
+
+```console:example/ctest_fail.log
+external/skytest/src/detail/test_style.hpp:43:27: error: the value of 'n' is not usable in a constant expression
+   43 |     static constexpr auto value = std::optional<bool>{bool{F{}()}};
+      |                           ^~~~~
+ctest_fail.cpp:9:15: note: 'int n' is not const
+    9 |   static auto n = 0;
+      |               ^
+
+```
+
+</details>
+
 
 ## examples
 

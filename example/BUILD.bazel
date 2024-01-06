@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("//rules:sh_binary_template.bzl", "sh_binary_template")
 load("//rules:binary_log.bzl", "synchronized_binary_log")
 
 cc_library(
@@ -28,6 +29,17 @@ cc_binary(
 synchronized_binary_log(
     name = "minimal_fail_log",
     src = ":minimal_fail",
+)
+
+sh_binary_template(
+    name = "ctest_fail",
+    srcs = ["ctest_fail.sh.tmpl"],
+    data = ["ctest_fail.cpp"],
+)
+
+synchronized_binary_log(
+    name = "ctest_fail_log",
+    src = ":ctest_fail",
 )
 
 cc_test(

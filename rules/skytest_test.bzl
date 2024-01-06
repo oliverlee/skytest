@@ -104,7 +104,6 @@ echo "done" >> $@
                     "$CC_BINARY_CXXSTD": std,
                     "$CC_BINARY_MALLOC": malloc,
                 },
-                "deps": ["//test:prelude_sh"],
             }
         else:
             fail("unhandled binary_type: {}".format(binary_type))

@@ -1,4 +1,36 @@
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load(
+    "@local_config_info//:defs.bzl",
+    "BAZEL_BIN",
+    "BAZEL_EXTERNAL_DIR",
+    "BAZEL_WORKSPACE_ROOT",
+    "XDG_CACHE_HOME",
+)
+
 exports_files(
     ["skytest_test.sh"],
     visibility = ["//test:__pkg__"],
+)
+
+expand_template(
+    name = "gen_prelude_sh",
+    out = "prelude.sh",
+    substitutions = {
+        "$BAZEL_BIN": BAZEL_BIN,
+        "$BAZEL_EXTERNAL_DIR": BAZEL_EXTERNAL_DIR,
+        "$BAZEL_WORKSPACE_ROOT": BAZEL_WORKSPACE_ROOT,
+        "$XDG_CACHE_HOME": XDG_CACHE_HOME,
+    },
+    tags = ["manual"],
+    template = "prelude.sh.tmpl",
+    visibility = ["//visibility:private"],
+)
+
+sh_library(
+    name = "prelude_sh",
+    srcs = ["prelude.sh"],
+    visibility = [
+        "//example:__pkg__",
+        "//test:__pkg__",
+    ],
 )

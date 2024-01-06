@@ -1,0 +1,6 @@
+external/skytest/src/detail/test_style.hpp:43:27: error: the value of 'n' is not usable in a constant expression
+   43 |     static constexpr auto value = std::optional<bool>{bool{F{}()}};
+      |                           ^~~~~
+ctest_fail.cpp:9:15: note: 'int n' is not const
+    9 |   static auto n = 0;
+      |               ^

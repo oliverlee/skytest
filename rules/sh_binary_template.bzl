@@ -6,11 +6,11 @@ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 
 def sh_binary_template(
         name,
-        substitutions,
+        substitutions = {},
         template = None,
         out = None,
         srcs = [],
-        deps = []):
+        **kwargs):
     """
     Combines expand_template with sh_binary
 
@@ -25,8 +25,8 @@ def sh_binary_template(
         Key-value mappings.
       srcs: string_label_list
         `srcs` used for `sh_binary`
-      deps: string_label_list
-        `deps` used for `sh_binary`
+      **kwargs: dict
+        additional args passed to `sh_binary`
     """
     if len(srcs) == 1 and template == None:
         template = srcs[0]
@@ -45,8 +45,11 @@ def sh_binary_template(
 
     binary_src = lambda src: src if src != template else out
 
+    data = kwargs.pop("data", [])
+
     native.sh_binary(
         name = name,
         srcs = [binary_src(src) for src in srcs],
-        deps = deps,
+        data = data + ["//rules:prelude_sh"],
+        **kwargs
     )
