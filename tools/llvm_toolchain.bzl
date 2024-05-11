@@ -4,11 +4,11 @@ instead of the system installed libraries.
 """
 
 load(
-    "@bazel_toolchain//toolchain:deps.bzl",
+    "@toolchains_llvm//toolchain:deps.bzl",
     _llvm_toolchain_dependencies = "bazel_toolchain_dependencies",
 )
 load(
-    "@bazel_toolchain//toolchain:rules.bzl",
+    "@toolchains_llvm//toolchain:rules.bzl",
     _llvm_toolchain = "llvm_toolchain",
     _llvm_toolchain_files = "llvm",
 )
@@ -97,7 +97,7 @@ def llvm_toolchain(linux_x86_64_sysroot = "", **kwargs):
         fail("""
         This rule requires the sysroot to be specified for linux-x86_64
         platforms. If this not desired, use `llvm_toolchain` from
-        `@bazel_toolchain` directly.
+        `@toolchains_llvm` directly.
         """)
 
     linux_x86_64_sysroot_pkg = linux_x86_64_sysroot
