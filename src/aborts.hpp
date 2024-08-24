@@ -6,6 +6,8 @@
 #include <cstring>
 #include <optional>
 #include <ostream>
+// https://www.man7.org/linux/man-pages/man3/strsignal.3.html
+#include <string.h>  // NOLINT(modernize-deprecated-headers)
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utility>
@@ -33,8 +35,8 @@ struct aborts_fn
           os << "exited: " << WEXITSTATUS(*r.status);
         }
         if (WIFSIGNALED(*r.status)) {
-          os << "terminated due to signal: SIG"
-             << sigabbrev_np(WTERMSIG(*r.status));
+          // NOLINTNEXTLINE(concurrency-mt-unsafe)
+          os << "terminated due to signal: " << strsignal(WTERMSIG(*r.status));
         }
       }
       return os;
