@@ -241,7 +241,7 @@ skytest_test(
         "does not abort.*FAIL",
         "exited: 0",
         "terminates due to sigint.*FAIL",
-        "signal: SIGINT",
+        "signal: Interrupt",
         "exits without abort.*FAIL",
         "exited: 1",
         "1 test passed.*3 tests failed",
