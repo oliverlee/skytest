@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/detail/is_range.hpp"
+#include "src/detail/is_specialization_of.hpp"
 #include "src/detail/priority.hpp"
 #include "src/detail/type_name.hpp"
 #include "src/rope.hpp"
@@ -38,9 +39,16 @@ class arg_fmt_fn
   }
 
   template <
-      class... Ts,
-      std::enable_if_t<not is_ostreamable_v<std::tuple<Ts...>>, bool> = true>
-  static constexpr auto impl(priority<2>, const std::tuple<Ts...>& arg)
+      class T,
+      std::enable_if_t<
+          is_specialization_of_v<T, std::tuple> and not is_ostreamable_v<T>,
+          bool> = true>
+  static constexpr auto impl(priority<2>, const T& arg)
+  {
+    return tuple_impl(arg);
+  }
+  template <class... Ts>
+  static constexpr auto tuple_impl(const std::tuple<Ts...>& arg)
   {
     return tuple_fmt<Ts...>{arg};
   }

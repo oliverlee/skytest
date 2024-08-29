@@ -27,6 +27,16 @@ struct array : std::array<T, N>
   }
 };
 
+template <class... Ts>
+struct custom_tuple : std::tuple<Ts...>
+{
+  friend auto& operator<<(std::ostream& os, const custom_tuple&)
+  {
+    os << "custom_tuple";
+    return os;
+  }
+};
+
 struct wrapped
 {
   int value;
@@ -39,6 +49,7 @@ auto main() -> int
   using namespace ::skytest::literals;
   using ::skytest::eq;
   using ::skytest::expect;
+  using ::skytest::ne;
 
   "array uses default range arg fmt"_test = [] {
     return expect(empty(std::array{1, 2, 3}));
@@ -46,6 +57,10 @@ auto main() -> int
 
   "custom array uses custom fmt"_test = [] {
     return expect(empty(array<int, 2>{4, 5}));
+  };
+
+  "custom tuple uses custom fmt"_test = [] {
+    return expect(ne(custom_tuple{}, custom_tuple{}));
   };
 
   "type without operator<< is displayed"_test = [] {
