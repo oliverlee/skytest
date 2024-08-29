@@ -130,6 +130,7 @@ skytest_test(
     stdout = [
         "empty(\\[1, 2, 3\\])",
         "empty({4}{5})",
+        "custom_tuple != custom_tuple",
         "wrapped{...} == wrapped{...}",
     ],
 )
