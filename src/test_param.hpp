@@ -224,7 +224,7 @@ private:
     for (auto it = params_.begin(); it != params_.end(); ++it) {
       // other options will alloc
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-      std::sprintf(s.data(), "%zu", i++);
+      std::snprintf(s.data(), N, "%zu", i++);
       test<derived_rope_type, style_type>{value_param_name(s.data())} = g[it];
     }
   }
