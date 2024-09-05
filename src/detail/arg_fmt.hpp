@@ -67,7 +67,7 @@ class arg_fmt_fn
 
 public:
   template <class T>
-  constexpr decltype(auto) operator()(const T & arg) const
+  constexpr decltype(auto) operator()(const T& arg) const
   {
     return impl(priority<3>{}, arg);
   }
