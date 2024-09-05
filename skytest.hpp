@@ -1,5 +1,6 @@
 #pragma once
 
+// IWYU pragma: begin_exports
 #include "src/aborts.hpp"
 #include "src/cfg.hpp"
 #include "src/default_printer.hpp"
@@ -12,3 +13,4 @@
 #include "src/test_param.hpp"
 #include "src/utility.hpp"
 #include "src/version.hpp"
+// IWYU pragma: end_exports
