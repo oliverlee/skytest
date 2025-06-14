@@ -75,11 +75,11 @@ http_archive(
     ),
 )
 
-load("//tools:llvm_toolchain_dependencies.bzl", "llvm_toolchain_dependencies")
+load("@toolchains_llvm//toolchain:deps.bzl", "bazel_toolchain_dependencies")
 
-llvm_toolchain_dependencies()
+bazel_toolchain_dependencies()
 
-load("//tools:llvm_toolchain.bzl", "llvm_toolchain")
+load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 
 llvm_toolchain(
     name = "llvm_toolchain",
@@ -96,7 +96,6 @@ llvm_toolchain(
     link_libs = {
         "": ["-fsanitize-link-c++-runtime"],
     },
-    linux_x86_64_sysroot = "@gcc_toolchain_files//x86_64-buildroot-linux-gnu/sysroot",
     llvm_version = "17.0.2",
 )
 
@@ -217,3 +216,7 @@ py_library(
         commit = MARKDOWN_EMBED_CODE_COMMIT,
     ),
 )
+
+load("//tools:local_config_info.bzl", "local_config_info")
+
+local_config_info(name = "local_config_info")
