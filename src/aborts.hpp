@@ -2,6 +2,7 @@
 
 #include "src/cfg.hpp"
 
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <optional>
@@ -11,6 +12,16 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utility>
+
+#if __LLVM_INSTR_PROFILE_GENERATE
+extern "C" int __llvm_profile_dump(void);
+inline auto dump_coverage() -> void
+{
+  __llvm_profile_dump();
+}
+#else
+inline auto dump_coverage() -> void {}
+#endif
 
 namespace skytest {
 
@@ -64,6 +75,15 @@ struct aborts_fn
 
     if (pid == 0) {
       cfg<Override>.silence();
+
+      std::signal(
+          SIGABRT,  //
+          +[](int) {
+            dump_coverage();
+            std::signal(SIGABRT, nullptr);
+            std::abort();
+          }  //
+      );
 
       std::forward<F>(f)();
 
