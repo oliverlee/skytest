@@ -29,6 +29,49 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.9/rules_cc-0.0.9.tar.gz"],
 )
 
+TOOLCHAINS_LLVM_COMMIT = "4ab573b1b87a57791ef2f9ccee71cbad80a2abb9"
+
+http_archive(
+    name = "toolchains_llvm",
+    integrity = "sha256-sCbaVUYAogO0jJ8N8CY4DYNdJLVLV0Z3TiPMKl81f44=",
+    strip_prefix = "toolchains_llvm-{commit}".format(
+        commit = TOOLCHAINS_LLVM_COMMIT,
+    ),
+    url = "https://github.com/bazel-contrib/toolchains_llvm/archive/{commit}.tar.gz".format(
+        commit = TOOLCHAINS_LLVM_COMMIT,
+    ),
+)
+
+load("@toolchains_llvm//toolchain:deps.bzl", "bazel_toolchain_dependencies")
+
+bazel_toolchain_dependencies()
+
+load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
+
+# https://github.com/bazel-contrib/toolchains_llvm/blob/192cf04bbb11b29a8ca6756e269d27a840bfa14b/toolchain/internal/repo.bzl
+llvm_toolchain(
+    name = "llvm_toolchain",
+    cxx_flags = {
+        "": [
+            "-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
+            "-stdlib=libc++",
+            "-Wshadow",
+        ] + COMMON_CXX_WARNINGS + CXX_STANDARD,
+    },
+    # Link UBSan C++ runtime libraries if the `ubsan` feature is enabled
+    # https://github.com/bazelbuild/bazel/issues/12797#issuecomment-980641064
+    # use `link_libs` to prevent overriding default `link_flags`
+    # https://github.com/grailbio/bazel-toolchain/blob/ceeedcc4464322e05fe5b8df3749cc02273ee083/toolchain/cc_toolchain_config.bzl#L148-L150
+    link_libs = {
+        "": ["-fsanitize-link-c++-runtime"],
+    },
+    llvm_version = "19.1.0",
+)
+
+load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
+
+llvm_register_toolchains()
+
 BAZEL_BOOTLIN_COMMIT = "d15e4b4c3a984668d1d6bd5f3ca032efecae5cb1"
 
 http_archive(
@@ -61,49 +104,6 @@ bootlin_toolchain(
     ] + COMMON_CXX_WARNINGS + CXX_STANDARD,
     libc_impl = "glibc",
 )
-
-TOOLCHAINS_LLVM_COMMIT = "ade23e0e37c5308162c012a4f4224459c1c4fa22"
-
-http_archive(
-    name = "toolchains_llvm",
-    integrity = "sha256-w3ZChtMXOMPuczl1aCct33Hx29RDmYkgNY/XlwItdH8=",
-    strip_prefix = "toolchains_llvm-{commit}".format(
-        commit = TOOLCHAINS_LLVM_COMMIT,
-    ),
-    url = "https://github.com/bazel-contrib/toolchains_llvm/archive/{commit}.tar.gz".format(
-        commit = TOOLCHAINS_LLVM_COMMIT,
-    ),
-)
-
-load("//tools:llvm_toolchain_dependencies.bzl", "llvm_toolchain_dependencies")
-
-llvm_toolchain_dependencies()
-
-load("//tools:llvm_toolchain.bzl", "llvm_toolchain")
-
-llvm_toolchain(
-    name = "llvm_toolchain",
-    cxx_flags = {
-        "": [
-            "-stdlib=libc++",
-            "-Wshadow",
-        ] + COMMON_CXX_WARNINGS + CXX_STANDARD,
-    },
-    # Link UBSan C++ runtime libraries if the `ubsan` feature is enabled
-    # https://github.com/bazelbuild/bazel/issues/12797#issuecomment-980641064
-    # use `link_libs` to prevent overriding default `link_flags`
-    # https://github.com/grailbio/bazel-toolchain/blob/ceeedcc4464322e05fe5b8df3749cc02273ee083/toolchain/cc_toolchain_config.bzl#L148-L150
-    link_libs = {
-        "": ["-fsanitize-link-c++-runtime"],
-    },
-    linux_x86_64_sysroot = "@gcc_toolchain_files//x86_64-buildroot-linux-gnu/sysroot",
-    llvm_version = "17.0.2",
-)
-
-# register llvm first, it has better error messages
-load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
-
-llvm_register_toolchains()
 
 register_toolchains(
     "@gcc_toolchain//:toolchain",
@@ -217,3 +217,7 @@ py_library(
         commit = MARKDOWN_EMBED_CODE_COMMIT,
     ),
 )
+
+load("//tools:local_config_info.bzl", "local_config_info")
+
+local_config_info(name = "local_config_info")
