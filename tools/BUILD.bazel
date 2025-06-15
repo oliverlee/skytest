@@ -1,5 +1,4 @@
 load("@bazel_clang_format//:defs.bzl", "clang_format_update")
-load("@bazel_clang_tidy//:defs.bzl", "clang_tidy_apply_fixes")
 load("@buildifier_prebuilt//:rules.bzl", "buildifier")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -15,13 +14,6 @@ clang_format_update(
     config = "//:format_config",
 )
 
-clang_tidy_apply_fixes(
-    name = "clang-tidy-fix",
-    apply_replacements_binary = "@llvm_toolchain//:clang-apply-replacements",
-    tidy_binary = "@llvm_toolchain//:clang-tidy",
-    tidy_config = "//:tidy_config",
-)
-
 buildifier(
     name = "buildifier.check",
     lint_mode = "warn",
@@ -35,23 +27,35 @@ buildifier(
 )
 
 genrule(
-    name = "gen_verbose_clang_tidy",
-    srcs = [],
-    outs = ["verbose-clang-tidy.sh"],
-    # echo "$(dirname bazel-out/k8-fastbuild/bin/tools/verbose-clang-tidy.sh)/../<tidy-path>) ..."
+    name = "gen-clang-tidy",
+    outs = ["clang-tidy.bash"],
     cmd = """
-echo "$$(dirname $@)/../$(rootpath {tidy}) --enable-check-profile \\$$@" > $@
+echo "#!/bin/bash" > $@
+echo "cd \\$$BUILD_WORKSPACE_DIRECTORY" >> $@
+echo "exec bazel build {options} \\$${{@:-{default}}}" >> $@
 """.format(
-        tidy = "@llvm_toolchain//:clang-tidy",
+        default = " -- //... -//test/... \\$$(bazel query //test/... | grep -v '.2[03]')",
+        options = " ".join([
+            "--extra_toolchains=//toolchain:clang",
+            "--aspects=@rules_clang_tidy//:aspects.bzl%check",
+            "--output_groups=report",
+            "--keep_going",
+            "--verbose_failures",
+        ]),
     ),
-    executable = True,
-    tools = ["@llvm_toolchain//:clang-tidy"],
 )
 
+# lint all targets with default options
+#  bazel run //tools:clang-tidy
+#
+# lint with a single check on a single target
+#   bazel run //tools:clang-tidy -- \
+#     --@rules_clang_tidy//:extra-options=--checks='-*,clang-analyzer-core.uninitialized.Assign' \
+#     //test:point_test
+#
 sh_binary(
-    name = "verbose-clang-tidy",
-    srcs = ["verbose-clang-tidy.sh"],
-    data = ["@llvm_toolchain//:clang-tidy"],
+    name = "clang-tidy",
+    srcs = ["clang-tidy.bash"],
 )
 
 bool_flag(

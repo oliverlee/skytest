@@ -3,6 +3,7 @@
 using ::skytest::eq;
 using ::skytest::expect;
 
+namespace {
 auto only_runtime() {}
 
 struct equals_one
@@ -10,6 +11,7 @@ struct equals_one
   int value;
   constexpr auto operator()() const { return expect(eq(1, value)); }
 };
+}  // namespace
 
 auto main() -> int
 {
