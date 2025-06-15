@@ -72,10 +72,10 @@ echo "ret=0" >> $@
 echo "(\$$binary | tee log.out) 3>&1 1>&2 2>&3 | tee log.err || ret=\$$?" >> $@
 echo "" >> $@
 echo "[ \$$ret -eq {return_code} ]" >> $@
-echo "for line in \"\$${{stdout[@]}}\"; do" >> $@
+echo "for line in \"\$${{stdout[@]+\"\$${{stdout[@]}}\"}}\"; do" >> $@
 echo "  contains \"\$$line\" log.out" >> $@
 echo "done" >> $@
-echo "for line in \"\$${{stderr[@]}}\"; do" >> $@
+echo "for line in \"\$${{stderr[@]+\"\$${{stderr[@]}}\"}}\"; do" >> $@
 echo "  contains \"\$$line\" log.err" >> $@
 echo "done" >> $@
 """.format(

@@ -120,18 +120,22 @@ http_archive(
     url = "https://github.com/oliverlee/bazel_clang_format/archive/%s.tar.gz" % BAZEL_CLANG_FORMAT_COMMIT,
 )
 
-BAZEL_CLANG_TIDY_COMMIT = "aae87699cca19d8f6e84538576ab47587043d1d2"
+RULES_CLANG_TIDY_COMMIT = "7c7278c9fa91471f7197455bcd8c2d1ffdd0ddeb"
 
 http_archive(
-    name = "bazel_clang_tidy",
-    sha256 = "ee7d89375b5c6554b40ea1b1132a8cf7e3e269f7c2f6b2f595e4c7181d44b736",
-    strip_prefix = "bazel_clang_tidy-{commit}".format(
-        commit = BAZEL_CLANG_TIDY_COMMIT,
+    name = "rules_clang_tidy",
+    integrity = "sha256-Lj5bI21yP04iFHRWiLvegD510bCJvbbVIRSTQ5+NA+4=",
+    strip_prefix = "rules_clang_tidy-{commit}".format(
+        commit = RULES_CLANG_TIDY_COMMIT,
     ),
-    url = "https://github.com/oliverlee/bazel_clang_tidy/archive/{commit}.tar.gz".format(
-        commit = BAZEL_CLANG_TIDY_COMMIT,
+    url = "https://github.com/oliverlee/rules_clang_tidy/archive/{commit}.tar.gz".format(
+        commit = RULES_CLANG_TIDY_COMMIT,
     ),
 )
+
+load("@rules_clang_tidy//:dependencies.bzl", "rules_clang_tidy_dependencies")
+
+rules_clang_tidy_dependencies()
 
 http_archive(
     name = "buildifier_prebuilt",

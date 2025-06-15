@@ -2,9 +2,9 @@ name: check
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ "*" ]
+    branches: ["*"]
 
 jobs:
   test:
@@ -13,41 +13,41 @@ jobs:
       fail-fast: false
       matrix:
         toolchain: [gcc, clang]
-        feature: ['', asan, tsan, ubsan]
+        feature: ["", asan, tsan, ubsan]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-test-${{ matrix.toolchain }}-${{ matrix.feature }}
+      - uses: ./.github/actions/ci-env-setup
+        with:
+          bazel-cache-key: bazel-test-${{ matrix.toolchain }}-${{ matrix.feature }}
 
-    - run: |
-        bazel \
-          test \
-          --config=${{ matrix.toolchain }} \
-          --features=${{ matrix.feature }} \
-          //...
+      - run: |
+          bazel \
+            test \
+            --config=${{ matrix.toolchain }} \
+            --features=${{ matrix.feature }} \
+            //...
 
   coverage:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-coverage
+      - uses: ./.github/actions/ci-env-setup
+        with:
+          bazel-cache-key: bazel-coverage
 
-    - run: |
-        bazel \
-          run \
-          //tools:lcov_list
+      - run: |
+          bazel \
+            run \
+            //tools:lcov_list
 
-    - uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./bazel-out/_coverage/_coverage_report.dat
-        fail_ci_if_error: true
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./bazel-out/_coverage/_coverage_report.dat
+          fail_ci_if_error: true
 
   build:
     runs-on: ubuntu-latest
@@ -55,36 +55,46 @@ jobs:
       fail-fast: false
       matrix:
         flag:
-          - '--config=clang-format'
-          - '--config=clang-tidy'
-          - '--config=verbose-clang-tidy'
-          - '--compilation_mode=opt'
-        exclude:
-          - flag: ${{ github.event_name == 'pull_request' && '--config=verbose-clang-tidy' || 'dummy' }}
+          - "--config=clang-format"
+          - "--compilation_mode=opt"
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-build-${{ matrix.flag }}
+      - uses: ./.github/actions/ci-env-setup
+        with:
+          bazel-cache-key: bazel-build-${{ matrix.flag }}
 
-    - run: |
-        bazel \
-          build \
-          ${{ matrix.flag }} \
-          //...
+      - run: |
+          bazel \
+            build \
+            ${{ matrix.flag }} \
+            //...
+
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/ci-env-setup
+        with:
+          bazel-cache-key: bazel-clang-tidy
+
+      - run: |
+          bazel \
+            run \
+            //tools:clang-tidy
 
   buildifier:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: ./.github/actions/ci-env-setup
-      with:
-        bazel-cache-key: bazel-buildifier
+      - uses: ./.github/actions/ci-env-setup
+        with:
+          bazel-cache-key: bazel-buildifier
 
-    - run: |
-        bazel \
-          run \
-          //tools:buildifier.check
+      - run: |
+          bazel \
+            run \
+            //tools:buildifier.check

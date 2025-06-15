@@ -70,6 +70,15 @@ Checks: >
     # false positives,
     -readability-simplify-boolean-expr,
 
+    # not on C++20,
+    -modernize-use-designated-initializers,
+
+    # leave missing braces semantic for uninit,
+    -readability-redundant-member-init,
+
+    # basic math operator precedence,
+    -readability-math-missing-parens,
+
 CheckOptions:
     - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
       value: true
@@ -84,4 +93,3 @@ CheckOptions:
 HeaderFilterRegex: '__main__/'
 
 WarningsAsErrors: '*'
-
