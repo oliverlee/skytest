@@ -82,12 +82,28 @@ auto main() -> int
 results in the follow build error (snippet):
 
 ```console:example/ctest_fail.log
-external/skytest/src/detail/test_style.hpp:43:27: error: the value of 'n' is not usable in a constant expression
+./src/detail/test_style.hpp:43:27: error: constexpr variable 'value<skytest::detail::static_closure<f>>' must be initialized by a constant expression
    43 |     static constexpr auto value = std::optional<bool>{bool{F{}()}};
-      |                           ^~~~~
-ctest_fail.cpp:9:15: note: 'int n' is not const
+      |                           ^       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./src/test.hpp:46:39: note: in instantiation of static data member 'skytest::detail::test_style::compile_time::value' requested here
+   46 |     result.compile_time = S::template value<F>;
+      |                                       ^
+./src/test.hpp:71:5: note: (skipping 2 contexts in backtrace; use -ftemplate-backtrace-limit=0 to see all)
+   71 |     assign_impl(static_closure<f>{});
+      |     ^
+external/llvm_toolchain_llvm/bin/../include/c++/v1/__functional/operations.h:374:37: note: read of non-const variable 'n' is not allowed in a constant expression
+  374 |     return std::forward<_T1>(__t) < std::forward<_T2>(__u);
+      |                                     ^
+./src/detail/predicate.hpp:38:24: note: in call to 'static_cast<const std::less<void> &>(*this).operator()<const int &, const int &>(0, n)'
+   38 |     const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+example/ctest_fail.cpp:10:47: note: (skipping 2 calls in backtrace; use -fconstexpr-backtrace-limit=0 to see all)
+   10 |   "read non-const"_ctest = [] { return expect(lt(0, n)); };
+      |                                               ^
+example/ctest_fail.cpp:9:15: note: declared here
     9 |   static auto n = 0;
       |               ^
+1 error generated.
 
 ```
 
