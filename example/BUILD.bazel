@@ -124,6 +124,12 @@ cc_test(
 )
 
 cc_test(
+    name = "constexpr_params_parameterized",
+    srcs = ["constexpr_params_parameterized.cpp"],
+    deps = [":skytest_wrapper"],
+)
+
+cc_test(
     name = "param_parameterized",
     srcs = ["param_parameterized.cpp"],
     copts = ["-std=c++20"],

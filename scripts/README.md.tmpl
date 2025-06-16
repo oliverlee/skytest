@@ -109,19 +109,21 @@ C++20 enables a terser syntax.
 #### parameterized tests
 <details><summary></summary>
 
-Tests can be parameterized by type
+Tests can be parameterized with a tuple-like
 
 ```cpp:example/type_parameterized.cpp
 ```
 
-or by value
+or with a range
 
 ```cpp:example/value_parameterized.cpp
 ```
 
-If parameters are defined as a static constant, `param_ref` may enable
-compile-time tests.
+If parameters are defined as a static constant, `constexr_params` and
+`param_ref` can be used to define compile-time tests.
 
+```cpp:example/constexpr_params_parameterized.cpp
+```
 ```cpp:example/param_ref_parameterized.cpp
 ```
 

@@ -342,9 +342,32 @@ inline constexpr auto param = param_t<Params>{};
 template <class... Ts>
 inline constexpr auto types = param_ref<detail::type_params<Ts...>>;
 
+template <auto... Values>
+struct constexpr_params_t
+{
+  template <std::size_t I>
+  friend constexpr auto get(constexpr_params_t) -> auto
+  {
+    return std::get<I>(std::tuple{Values...});
+  }
+};
+
+template <auto... Values>
+inline constexpr auto constexpr_params_instance =
+    constexpr_params_t<Values...>{};
+
+template <auto... Values>
+inline constexpr auto constexpr_params =
+    param_ref<constexpr_params_instance<Values...>>;
+
 }  // namespace skytest
 
 template <class... Args>
 struct std::tuple_size<::skytest::detail::type_list<Args...>>
     : ::std::integral_constant<std::size_t, sizeof...(Args)>
+{};
+
+template <auto... Values>
+struct std::tuple_size<skytest::constexpr_params_t<Values...>>
+    : std::integral_constant<std::size_t, sizeof...(Values)>
 {};
