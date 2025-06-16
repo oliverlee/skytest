@@ -1,6 +1,7 @@
+load("@rules_build_error//lang/cc:defs.bzl", "cc_build_error")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-load("//rules:sh_binary_template.bzl", "sh_binary_template")
 load("//rules:binary_log.bzl", "synchronized_binary_log")
+load("@rules_multirun//:defs.bzl", "multirun")
 
 cc_library(
     name = "skytest_wrapper",
@@ -31,10 +32,15 @@ synchronized_binary_log(
     src = ":minimal_fail",
 )
 
-sh_binary_template(
+cc_build_error(
     name = "ctest_fail",
-    srcs = ["ctest_fail.sh.tmpl"],
-    data = ["ctest_fail.cpp"],
+    src = "ctest_fail.cpp",
+    copts = [
+        "-fno-diagnostics-color",
+        "-fconstexpr-backtrace-limit=1",
+        "-ftemplate-backtrace-limit=1",
+    ],
+    deps = [":skytest_wrapper"],
 )
 
 synchronized_binary_log(
@@ -131,38 +137,15 @@ cc_binary(
     deps = [":skytest_wrapper"],
 )
 
-update_targets = [
-    ":minimal_pass_log.update.sh",
-    ":minimal_fail_log.update.sh",
-    ":additional_output_log.update.sh",
-    ":user_defined_predicates_log.update.sh",
-    ":described_predicates_log.update.sh",
-    ":described_predicates_20_log.update.sh",
-]
-
-genrule(
-    name = "update_all_sh",
-    srcs = update_targets,
-    outs = ["update_all.sh"],
-    cmd = """
-set -euo pipefail
-echo "set -euo pipefail" > $@
-echo "" >> $@
-echo "for cmd in {update_targets}; do" >> $@
-echo "    \"\\$$cmd\"" >> $@
-echo "done" >> $@
-""".format(
-        update_targets = " ".join([
-            "$(rootpath {})".format(x)
-            for x in update_targets
-        ]),
-    ),
-    tags = ["manual"],
-    visibility = ["//visibility:private"],
-)
-
-sh_binary(
+multirun(
     name = "update_all",
-    srcs = ["update_all.sh"],
-    data = update_targets,
+    commands = [
+        ":ctest_fail_log.update",
+        ":minimal_pass_log.update",
+        ":minimal_fail_log.update",
+        ":additional_output_log.update",
+        ":user_defined_predicates_log.update",
+        ":described_predicates_log.update",
+        ":described_predicates_20_log.update",
+    ],
 )

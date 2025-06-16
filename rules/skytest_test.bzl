@@ -3,12 +3,10 @@ Test stdout and return code of a unit test for skytest.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load(":sh_binary_template.bzl", "sh_binary_template")
 
 def skytest_test(
         name,
         srcs = [],
-        binary_type = cc_binary,
         malloc = "@bazel_tools//tools/cpp:malloc",
         cxxstd = [17, 20, 23],
         stdout = [],
@@ -23,8 +21,6 @@ def skytest_test(
         Name for `skytest_test` rule.
       cxxstd: int_list
         List of C++ standard versions to test with.
-      binary_type: string
-        Type of binary to build
 
       srcs: string_list
         Executable sources used to build a C++ binary target.
@@ -88,31 +84,21 @@ echo "done" >> $@
         testonly = True,
     )
 
+    deps = kwargs.pop("deps", []) + ["//:skytest"]
+    copts = kwargs.pop("copts", [])
+
     tests = []
     for std in [str(std) for std in cxxstd]:
         suffix = "." + std
-
-        if binary_type == cc_binary:
-            binary_kwargs = {
-                "deps": kwargs.get("deps", []) + ["//:skytest"],
-                "copts": kwargs.get("copts", []) + ["-std=c++" + std],
-                "malloc": malloc,
-            }
-        elif binary_type == sh_binary_template:
-            binary_kwargs = {
-                "substitutions": {
-                    "$CC_BINARY_CXXSTD": std,
-                    "$CC_BINARY_MALLOC": malloc,
-                },
-            }
-        else:
-            fail("unhandled binary_type: {}".format(binary_type))
-
         binary = name + "_bin" + suffix
-        binary_type(
+
+        cc_binary(
             name = binary,
             srcs = srcs,
-            **(kwargs | binary_kwargs)
+            deps = deps,
+            copts = copts + ["-std=c++" + std],
+            malloc = malloc,
+            **kwargs
         )
 
         native.sh_test(

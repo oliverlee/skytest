@@ -1,5 +1,5 @@
 load("//rules:skytest_test.bzl", "skytest_test")
-load("//rules:sh_binary_template.bzl", "sh_binary_template")
+load("//rules:skytest_compile_error_test.bzl", "skytest_compile_error_test")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 skytest_test(
@@ -276,15 +276,17 @@ skytest_test(
     ],
 )
 
-skytest_test(
+skytest_compile_error_test(
     name = "noreturn_expect_test",
-    srcs = ["noreturn_expect.sh.tmpl"],
-    binary_type = sh_binary_template,
-    return_code = 1,
-    stderr = [
-        "noreturn_expect.cpp:11:25:.*error:.*ignoring return value of.*expect",
-        "11 |\\s*expect\\(.*\\).*;",
-    ],
+    src = "noreturn_expect.cpp",
+    stderr = {
+        "@rules_cc//cc/compiler:gcc": [
+            "test/noreturn_expect.cpp:11:25: error: ignoring return value of '.*', declared with attribute 'nodiscard'",
+        ],
+        "@rules_cc//cc/compiler:clang": [
+            "test/noreturn_expect.cpp:11:9: error: ignoring return value of function declared with 'nodiscard' attribute",
+        ],
+    },
 )
 
 skytest_test(
@@ -297,15 +299,23 @@ skytest_test(
     ],
 )
 
-skytest_test(
+skytest_compile_error_test(
     name = "ctest_build_failure_test",
-    srcs = ["ctest_build_failure.sh.tmpl"],
-    binary_type = sh_binary_template,
-    return_code = 1,
-    stderr = [
-        "11.*test1",
-        "11.*error.*the value of .*x.* is not usable in a constant expression",
-        "15.*test2",
-        "15.*error.*the value of .*x.* is not usable in a constant expression",
-    ],
+    src = "ctest_build_failure.cpp",
+    stderr = {
+        "@rules_cc//cc/compiler:clang": [
+            "12.*\"test1\"_ctest",
+            "test/ctest_build_failure.cpp:12:23: note: read of non-const variable 'x' is not allowed in a constant expression",
+            "15.*\"test2\"_ctest",
+            "test/ctest_build_failure.cpp:16:23: note: read of non-const variable 'x' is not allowed in a constant expression",
+        ],
+        "@rules_cc//cc/compiler:gcc": [
+            "11.*\"test1\"_ctest",
+            "test/ctest_build_failure.cpp:11:21: error: the value of 'x' is not usable in a constant expression",
+            "test/ctest_build_failure.cpp:3:6: note: 'bool x' is not const",
+            "15.*\"test2\"_ctest",
+            "test/ctest_build_failure.cpp:15:34: error: the value of 'x' is not usable in a constant expression",
+            "test/ctest_build_failure.cpp:3:6: note: 'bool x' is not const",
+        ],
+    },
 )

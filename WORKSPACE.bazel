@@ -22,11 +22,34 @@ COMMON_CXX_WARNINGS = [
     "-Wimplicit-fallthrough",
 ]
 
+# `@rules_cc` depends on `com_google_protobuf`
+http_archive(
+    name = "com_google_protobuf",
+    integrity = "sha256-K2lcservjhc/iEI17m1V9XGG6V2J67MTYe5Vy1/RuZY=",
+    strip_prefix = "protobuf-31.0",
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/v31.0.tar.gz",
+    ],
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+load("@rules_java//java:rules_java_deps.bzl", "rules_java_dependencies")
+
+rules_java_dependencies()
+
+load("@rules_java//java:repositories.bzl", "rules_java_toolchains")
+
+rules_java_toolchains()
+
+# use a recent version of `@rules_cc` for `@rules_build_error`
 http_archive(
     name = "rules_cc",
-    sha256 = "2037875b9a4456dce4a79d112a8ae885bbc4aad968e6587dca6e64f3a0900cdf",
-    strip_prefix = "rules_cc-0.0.9",
-    urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.9/rules_cc-0.0.9.tar.gz"],
+    sha256 = "712d77868b3152dd618c4d64faaddefcc5965f90f5de6e6dd1d5ddcd0be82d42",
+    strip_prefix = "rules_cc-0.1.1",
+    urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.1.1/rules_cc-0.1.1.tar.gz"],
 )
 
 TOOLCHAINS_LLVM_COMMIT = "4ab573b1b87a57791ef2f9ccee71cbad80a2abb9"
@@ -184,12 +207,11 @@ python_register_toolchains(
     python_version = "3.11",
 )
 
-load("@python3_11//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "pip",
-    python_interpreter_target = interpreter,
+    python_interpreter_target = "@python3_11_host//:python",
     requirements_lock = "//tools:requirements.lock",
 )
 
@@ -225,3 +247,22 @@ py_library(
 load("//tools:local_config_info.bzl", "local_config_info")
 
 local_config_info(name = "local_config_info")
+
+RULES_BUILD_ERROR_COMMIT = "4ea1a4fa702b16389c7eb3b695ef97a23dfe9330"
+
+http_archive(
+    name = "rules_build_error",
+    sha256 = "db4363c0346b1e12a58d32e6c9d8b7036fcb0655a2a6391d21a6f13b8bfaed1a",
+    strip_prefix = "rules_build_error-{commit}".format(
+        commit = RULES_BUILD_ERROR_COMMIT,
+    ),
+    url = "https://github.com/yuyawk/rules_build_error/archive/{commit}.tar.gz".format(
+        commit = RULES_BUILD_ERROR_COMMIT,
+    ),
+)
+
+http_archive(
+    name = "rules_multirun",
+    sha256 = "0e124567fa85287874eff33a791c3bbdcc5343329a56faa828ef624380d4607c",
+    url = "https://github.com/keith/rules_multirun/releases/download/0.9.0/rules_multirun.0.9.0.tar.gz",
+)
