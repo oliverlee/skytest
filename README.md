@@ -316,7 +316,7 @@ auto main() -> int
 <details><summary></summary>
 
 
-Tests can be parameterized by type
+Tests can be parameterized with a tuple-like
 
 ```cpp:example/type_parameterized.cpp
 #include "skytest/skytest.hpp"
@@ -344,7 +344,7 @@ auto main() -> int
 
 ```
 
-or by value
+or with a range
 
 ```cpp:example/value_parameterized.cpp
 #include "skytest/skytest.hpp"
@@ -363,9 +363,26 @@ auto main() -> int
 
 ```
 
-If parameters are defined as a static constant, `param_ref` may enable
-compile-time tests.
+If parameters are defined as a static constant, `constexr_params` and
+`param_ref` can be used to define compile-time tests.
 
+```cpp:example/constexpr_params_parameterized.cpp
+#include "skytest/skytest.hpp"
+
+auto main() -> int
+{
+  using namespace ::skytest::literals;
+  using ::skytest::constexpr_params;
+  using ::skytest::eq;
+  using ::skytest::expect;
+
+  "types with param_ref"_ctest * constexpr_params<1, 2U> =  //
+      [](auto param) {
+        return expect(eq(std::is_same_v<int, decltype(param)> ? 1 : 2, param));
+      };
+}
+
+```
 ```cpp:example/param_ref_parameterized.cpp
 #include "skytest/skytest.hpp"
 
