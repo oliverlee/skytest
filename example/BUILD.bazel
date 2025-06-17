@@ -155,3 +155,12 @@ multirun(
         ":described_predicates_20_log.update",
     ],
 )
+
+filegroup(
+    name = "all_files",
+    srcs = glob([
+        "*.cpp",
+        "*.log",
+    ]),
+    visibility = ["//scripts:__pkg__"],
+)

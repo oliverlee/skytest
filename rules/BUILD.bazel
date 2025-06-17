@@ -1,4 +1,7 @@
 exports_files(
     ["copy_to_workspace.bash"],
-    visibility = ["//example:__pkg__"],
+    visibility = [
+        "//example:__pkg__",
+        "//scripts:__pkg__",
+    ],
 )
