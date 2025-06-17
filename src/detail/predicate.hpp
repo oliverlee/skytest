@@ -29,15 +29,14 @@ struct predicate : F
   constexpr predicate(T&& f) : F{std::forward<T>(f)}
   {}
 
-  template <
-      class... Ts,
-      class =
-          std::enable_if_t<std::is_invocable_r_v<bool, const F&, const Ts&...>>>
+  template <class... Ts>
   constexpr auto operator()(Ts&&... args) const
   {
-    const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
+    auto value = static_cast<const F&>(*this)(std::as_const(args)...);
+
     return relation<predicate, std::decay_t<Ts>...>{
-        std::tuple<std::decay_t<Ts>...>{std::forward<Ts>(args)...}, value};
+        std::tuple<std::decay_t<Ts>...>{std::forward<Ts>(args)...},
+        std::move(value)};
   }
 };
 

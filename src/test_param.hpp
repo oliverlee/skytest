@@ -152,21 +152,14 @@ struct param_bound_closure
 template <const auto& func, const auto& params>
 struct param_bound_static_closure
 {
-  template <
-      std::size_t I,
-      class P = remove_cvref_t<decltype(params)>,
-      std::enable_if_t<not is_range_v<P>, bool> = true>
+  template <std::size_t I>
   constexpr auto operator[](constant<I>) const
   {
-    return [] { return func(get<I>(params)); };
-  }
-  template <
-      std::size_t I,
-      class P = remove_cvref_t<decltype(params)>,
-      std::enable_if_t<is_range_v<P>, bool> = true>
-  constexpr auto operator[](constant<I>) const
-  {
-    return [] { return func(params.begin()[I]); };
+    if constexpr (is_range_v<decltype(params)>) {
+      return [] { return func(params.begin()[I]); };
+    } else {
+      return [] { return func(get<I>(params)); };
+    }
   }
 };
 
@@ -246,34 +239,25 @@ public:
       : params_{params}, basename_{basename}
   {}
 
-  template <
-      class F,
-      std::enable_if_t<
-          param_invocable_v<F, params_type> and
-              not(is_static_closure_constructible_v<F> and
-                  has_static_value_v<params_type>),
-          bool> = true>
+  template <class F>
   auto operator=(const F& func) && -> void
   {
-    assign_impl(
-        param_sequence_t<params_type>{},
-        param_bound_closure<F, params_type>{func, params_});
-  }
-  template <
-      class F,
-      std::enable_if_t<
-          param_invocable_v<F, params_type> and
-              is_static_closure_constructible_v<F> and
-              has_static_value_v<params_type>,
-          bool> = true>
-  auto operator=(const F& func) && -> void
-  {
-    static const auto f = func;
-    static constexpr const auto& p = params_type::value;
+    constexpr auto is_constexpr_invocable =
+        is_static_closure_constructible_v<F> and
+        has_static_value_v<params_type>;
 
-    assign_impl(
-        std::make_index_sequence<static_size_v<params_type>>{},
-        param_bound_static_closure<f, p>{});
+    if constexpr (is_constexpr_invocable) {
+      static const auto f = func;
+      static constexpr const auto& p = params_type::value;
+
+      assign_impl(
+          std::make_index_sequence<static_size_v<params_type>>{},
+          param_bound_static_closure<f, p>{});
+    } else {
+      assign_impl(
+          param_sequence_t<params_type>{},
+          param_bound_closure<F, params_type>{func, params_});
+    }
   }
 };
 
