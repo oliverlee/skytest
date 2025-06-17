@@ -2,6 +2,25 @@
 
 A non-allocating[^1] C++17+ unit test framework.
 
+## usage
+
+```starlark
+# .bazelrc
+common --registry=https://raw.githubusercontent.com/digiboys/bazel-registry/main
+common --registry=https://bcr.bazel.build
+```
+
+```starlark
+# MODULE.bazel
+bazel_dep(
+    name = "skytest",
+    version = "0.0.0",
+    dev_dependency = True,
+)
+```
+
+Then create a `cc_test` that depends on `@skytest`
+
 ## overview
 
 A minimal unit test example
