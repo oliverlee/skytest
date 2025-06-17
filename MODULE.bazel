@@ -1,3 +1,6 @@
-module(name = "skytest")
+module(
+    name = "skytest",
+    version = "0.0.0",
+)
 
 bazel_dep(name = "rules_cc", version = "0.1.1")
