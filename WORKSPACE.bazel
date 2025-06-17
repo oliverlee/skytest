@@ -244,10 +244,6 @@ py_library(
     ),
 )
 
-load("//tools:local_config_info.bzl", "local_config_info")
-
-local_config_info(name = "local_config_info")
-
 RULES_BUILD_ERROR_COMMIT = "4ea1a4fa702b16389c7eb3b695ef97a23dfe9330"
 
 http_archive(

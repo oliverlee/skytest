@@ -3,7 +3,6 @@ Rule for generating a coverage report
 """
 
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@local_config_info//:defs.bzl", "BAZEL_BIN")
 
 def lcov(
         name,
@@ -66,7 +65,7 @@ def lcov(
     ]
 
     coverage_command = " ".join(
-        ["{bazel} coverage {bazel_common_opts}"] +
+        ["bazel coverage {bazel_common_opts}"] +
         coverage_opts + instrumented + test_targets,
     )
 
@@ -86,7 +85,7 @@ def lcov(
         "lcov_tool=\"$(pwd)/${{1}}\"",
         "",
         "cd $BUILD_WORKSPACE_DIRECTORY",
-        "output_path=\"$({bazel} info {bazel_common_opts} output_path)\"",
+        "output_path=\"$(bazel info {bazel_common_opts} output_path)\"",
         "coverage_report=\"${{output_path}}/_coverage/_coverage_report.dat\"",
         "",
         coverage_command + " || true",
@@ -97,7 +96,6 @@ def lcov(
 
     content = [
         line.format(
-            bazel = BAZEL_BIN,
             bazel_common_opts = "",
         )
         for line in content
