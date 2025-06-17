@@ -10,9 +10,9 @@
 external/llvm_toolchain_llvm/bin/../include/c++/v1/__functional/operations.h:374:37: note: read of non-const variable 'n' is not allowed in a constant expression
   374 |     return std::forward<_T1>(__t) < std::forward<_T2>(__u);
       |                                     ^
-./src/detail/predicate.hpp:38:24: note: in call to 'static_cast<const std::less<void> &>(*this).operator()<const int &, const int &>(0, n)'
-   38 |     const auto value = static_cast<const F&>(*this)(std::as_const(args)...);
-      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./src/detail/predicate.hpp:35:18: note: in call to 'static_cast<const std::less<void> &>(*this).operator()<const int &, const int &>(0, n)'
+   35 |     auto value = static_cast<const F&>(*this)(std::as_const(args)...);
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 example/ctest_fail.cpp:10:47: note: (skipping 2 calls in backtrace; use -fconstexpr-backtrace-limit=0 to see all)
    10 |   "read non-const"_ctest = [] { return expect(lt(0, n)); };
       |                                               ^
